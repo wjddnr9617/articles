@@ -39,7 +39,7 @@
 \usepackage{float}
 \usepackage{placeins}
 \usepackage{cleveref}
-
+\usepackage{booktabs}
 %%%Author macros
 % \def\tsc#1{\csdef{#1}{\textsc{\lowercase{#1}}\xspace}}
 % \tsc{WGM}
@@ -123,84 +123,104 @@
 %============================================================%
 \section{Introduction}
 
+%LLM의 등장, 새로운 패러다임, 기존 Fine-Tuning의 한계점 및 해결 방안
 오늘날 대규모 언어 모델(Large Language Models, LLMs)의 발전은 자연어 처리 기술의 패러다임을 근본적으로 변화시켰다. 
 수십억 개 이상의 파라미터를 가진 LLM은 질의응답, 요약, 분류, 생성 등 다양한 태스크에서 사람 수준의 성능을 보이며, 산업과 공공 분야에 이르기까지 폭넓게 활용되고 있다. 
 그러나 이러한 놀라운 성과 뒤에는 여전히 해결되지 않은 핵심적인 기술 과제가 존재한다. 
-이는 모델이 새로운 정보나 지식 변화에 얼마나 신속하고 효율적으로 적응할 수 있는지를 평가하고, 그 과정에서 발생하는 기술적 제약을 해결하는 것이다.
-기존의 fine-tuning 방식은 새로운 데이터를 모델에 반영하는 가장 직접적인 방법으로 널리 사용되어 왔다. 
-하지만 LLM의 파라미터 수가 기하급수적으로 증가함에 따라, 전체 모델을 다시 학습하는 방식은 막대한 시간, GPU 메모리, 연산 비용을 요구하게 된다. 
-특히 실시간성이 요구되는 서비스나 지속적으로 데이터가 유입되는 환경에서는 전체 모델을 반복적으로 재학습하는 방식은 유지보수 측면에서도 현실적이지 않다. 
-이러한 문제를 해결하기 위해, 최근에는 fULL fine-tuning을 수행하지 않으면서도 최신 정보를 모델의 출력에 반영할 수 있는 다양한 접근이 시도되어 왔다. 
-대표적인 예로는 Retrieval-Augmented Generation (RAG), Continual Learning, Information Injection (e.g., Zero-shot, Few-shot, In-context Learning), Knowledge-Based Editing (KME) 등이 있다.
-RAG는 외부 지식을 검색해 조건으로 활용함으로써 유연한 지식 반영이 가능하지만, 생성 결과의 정합성을 보장하기 어렵고, 논리적으로 일관되지 않은 응답을 생성할 수 있다. 
+이는 모델이 새로운 정보와 지식의 변화에 얼마나 신속하고 효율적으로 적응할 수 있는가이며, 동시에 그 과정에서 발생하는 자원적, 기술적 제약을 어떻게 극복할 것인가라는 문제이다.
+기존의 Fine-tuning 방식은 새로운 데이터를 모델에 반영하는 가장 직접적이고 직관적인 접근법으로 널리 활용되어 왔다. 
+하지만 LLM의 규모가 기하급수적으로 증가함에 따라, 전체 파라미터를 다시 학습하는 방식은 막대한 시간과 GPU 메모리, 연산 비용을 요구한다. 
+특히 실시간성이 요구되거나 지속적으로 데이터가 유입되는 환경에서는 전체 모델을 반복적으로 재학습하는 방식이 유지보수 측면에서 현실적이지 않다. 
+이러한 문제를 해결하기 위해, 최근에는 Full fine-tuning을 수행하지 않고도 최신 정보를 모델의 출력에 반영할 수 있는 다양한 접근이 시도되어 왔다. 
+대표적인 예로는 사전학습 지식을 활용하는 Transfer Learning, 순차적 학습을 지원하는 Continual Learning, 프롬프트를 조정하는 Prompt Engineering(e.g., Zero-shot, Few-shot, In-context Learning),파라미터 효율성을 강조한 Parameter-Efficient Fine-Tuning(PEFT), 외부 지식 검색을 결합한 Retrieval-Augmented Generation (RAG),그리고 특정 지식을 국소적으로 수정하는 Knowledge-Based Editing (KME) 등이 있다.
+%%표
+
+% 표 삽입
+% 새로운 해결방안들의 한계, KME 등장, KME특징
+Transfer Learning은 사전학습 지식을 활용하여 새로운 태스크에 빠르게 적응할 수 있는 효과적인 방법이지만, 여전히 대규모 파라미터를 다시 학습해야하는 경우가 많아 자원 소모가 크다는 단점을 갖는다.
 Continual learning은 기존 지식을 유지하면서도 순차적으로 학습이 가능하다는 점에서 이상적인 방법으로 보이지만, 실제로는 catastrophic forgetting 문제와 데이터 순서에 민감하다는 심각한 제약이 존재한다. 
-Zero-shot이나 Few-shot prompting 등은 빠르고 유연하지만, reasoning이나 정합성이 요구되는 작업에서는 불안정한 성능을 보이는 경우가 많다.
-adaptive layer 기반 학습 기법(예: LoRA)  이 방식은 파라미터 전체가 아닌 저차원의 랭크 공간에만 변화를 가함으로써, 계산 자원은 절감하면서도 fine-tuning 효과를 얻을 수 있게 한다.
-새로운 정보를 모델에 반영하는 작업은 여전히 어려운 문제로 남아 있으며, 단순한 파인튜닝 또는 프롬프트 기반 접근만으로는 불충분하다.
-이러한 문제는 특히 가짜 뉴스 탐지(Fake News Detection)와 같은 태스크에서 더 치명적이다. 
-이 분야는 시의성 있는 정보가 핵심이며, 시간에 따라 사실 여부가 바뀌거나, 상반되는 정보가 등장하는 경우가 많다. 
-최근에는 소셜 미디어(SNS)나 인터넷을 통해 Hallucination이 포함된 정보, 또는 빠르게 생성되는 새로운 데이터가 폭발적으로 증가하고 있다. 
-COVID-19와 같은 급변하는 이슈에 대해 모델이 정합성 있는 판단을 내리기 위해서는, 이러한 최신 정보의 반영이 필수적이다. 
-비록 COVID-19의 유행은 전 세계적으로 어느 정도 완화되었지만, 향후 유사한 보건 위기가 재발할 가능성은 여전히 존재하며, 이로 인해 COVID-19 가짜 뉴스 탐지에 대한 연구는 여전히 활발히 진행되고 있다.
-따라서 모델은 끊임없이 변화하는 정보에 적응하면서도, 기존에 학습한 지식을 유지할 수 있어야 한다. 
-이러한 배경 속에서 최근 주목받고 있는 방법이 바로 Knowledge-Based Editing (KME)이다.
-%KME는 대규모 언어 모델(LLM)의 지식 기반을 효율적으로 수정하는 방법론으로, 전체 모델을 재학습하지 않고도 모델의 출력을 특정 방식으로 변경할 수 있게 한다. 
-%이는 LLM의 응답 신뢰성 향상, 최신 정보 반영, 유해한 정보 제거 등의 실질적인 요구에 대응하는 방식으로 최근 주목받고 있다.
-%KME는 인간의 학습 단계를 참고하여 세 가지 위상으로 나눌 수 있다: Recognition, Association, Mastery【148†A Comprehensive Study】. Recognition Phase는 외부 지식을 검색하거나 삽입해 모델이 새로운 정보를 인식하게 만드는 단계로, RAG나 In-context Learning이 대표적이다. Association Phase에서는 LoRA나 adapter와 같은 방식으로 모델의 표현에 새로운 지식을 연결하며, Mastery Phase에서는 기존 파라미터를 직접 수정하여 지식을 완전히 내재화한다. ROME, MEMIT, MEND 등이 대표적인 Mastery 기반 기법이다.
-
-%이러한 KME 기법들은 다음과 같은 지표로 평가된다: (1) Edit Success – 목표 지식 수정의 정확도, (2) Portability – 유사 질의에도 수정 효과가 유지되는가, (3) Locality – 비관련 지식에는 영향이 없는가, (4) Fluency – 출력 문장의 자연성 유지.
-
-하지만, 현재 제안된 ROME, MEMIT과 같은 기법들은 대부분 단일 문장에 대한 단순한 지식 삽입 방식에 국한되며, 기존의 잘못된 정보를 삭제하거나 정정하는 기능이 부재하다. 
-이는 모델 내부의 지식 충돌을 유발할 수 있으며, 오히려 모델의 일관성과 신뢰도를 떨어뜨릴 가능성이 있다. 또한 복잡한 다중 문장 추론이나 문맥 기반 관계성을 반영하지 못하는 한계가 있다.
-
-- 수정 대상 추출의 어려움
-
-- 복잡한 다중 문장 추론의 부재
-
-- 논리 관계 무시에 따른 비정합성 문제
-
-이처럼 기존의 다양한 접근 방식들은 각기 유용한 특성을 가지고 있지만, "새로운 정보가 기존 지식과 어떤 관계에 있는지를 평가하고, 그 관계에 따라 모델을 선택적으로 fine-tuning할 수 있는 구조"는 아직 명확히 제시되지 않았다.
-본 논문은 바로 이 지점에 주목하여, Knowledge-Based Editing의 개념을 확장한 Relation-aware Fine-tuning이라는 새로운 학습 전략을 제안한다. 
-이 접근은 RAG, Continual Learning, Prompt-based Learning, Knowledge Editing의 장점을 통합하면서도, 그들의 구조적 한계를 보완할 수 있는 포괄적인 접근 방식이다.
-Relation-aware Fine-tuning의 핵심 아이디어는 다음과 같다:
-새롭게 수집된 문장이나 정보가 모델의 기존 출력 결과와 어떤 논리적 관계(Entailment, Contradiction, Neutral)를 갖는지를 먼저 평가한다.
-이 관계 평가는 자연어 추론(Natural Language Inference, NLI) 기반의 구조를 사용하여 자동으로 수행된다.
-특히, 새로운 정보가 기존 예측과 모순되는 경우(Contradiction)에만 fine-tuning을 수행하고, **포함(Entailment)**의 경우는 유지, **중립(Neutral)**인 경우는 별도의 중립 데이터로 보존하여 필요 시 활용하는 방식이다.
-
-또한 본 연구에서는 이 판단 과정에 있어 모델의 confidence (softmax 기반 신뢰도)를 함께 고려한다. 
-Confidence가 일정 임계값 이상(예: τ ≥ 0.7)일 때에만 관계 평가를 수행하고, 그렇지 않은 경우는 update를 보류하거나 중립 데이터로 분류함으로써, 불확실한 판단에 근거한 과도한 업데이트나 노이즈 반영을 방지한다.
+RAG는 외부 지식을 검색해 조건으로 활용함으로써 유연한 지식 반영이 가능하지만, 생성 결과의 정합성을 보장하기 어렵고, 논리적으로 일관되지 않은 응답을 생성할 수 있다. 또한, 이는 모델 파라미터 자체를 갱신하는 방식이 아니므로, 시간이 지나거나 외부 문서가 소실되면 지식이 사라진다는 한계가 있다. 
+Zero-shot이나 Few-shot prompting과 같은 프롬프트 기반 접근 역시 빠르고 유연하다는 장점이 있으나, 추론이나 정합성이 중요한 작업에서는 불안정한 성능을 보이기 쉽다. 이 또한 파라미터 튜닝이 수반되지 않는다는 점에서 본질적인 한계를 가진다.
+한편, LoRA(Low Rank Adaptation)와 같은 adaptive layer 기반 기법은 전체 파라미터를 학습하는 대신 저차원 랭크 공간만 조정하여 연산 자원을 절감하면서도 fine-tuning 효과를 얻을 수 있도록한다. 그럼에도 불구하고, 새로운 지식을 모델 내부에 충분히 반영하는 작업은 여전히 어려운 과제로 남아 있다.
+이러한 배경 속에서 최근 주목받고 있는 방법이 바로 Knowledge-Based Model Editing (KME)이다.
+KME는 대규모 언어 모델(LLM)의 지식 기반을 효율적으로 수정하는 방법론으로, 전체 모델을 재학습하지 않고도 특정 지식을 반영할 수 있다.
+이를 통해 LLM의 응답 신뢰성을 높이고, 최신 정보를 반영하며 실질적인 요구를 충족시킬 수 있다.
+특히, KME는 인간의 학습 단계를 참고하여 세 가지 위상으로 구분된다: Recognition, Association, Mastery. Recognition Phase는 외부 지식을 검색하거나 삽입해 모델이 새로운 정보를 인식하게 하며, RAG나 In-context Learning이 대표적이다. Association Phase에서는 LoRA나 adapter와 같은 기법을 통해 새로운 지식을 모델의 표현 공간에 연결한다.마지막으로 Mastery Phase에서는 모델의 파라미터를 직접 수정하여 지식을 완전히 내재화하며, ROME, MEMIT, MEND 등이 대표적인 기법에 해당된다.
+이러한 KME 기법들은 일반적으로 (1) Generality - 다양한 입력 상황에서도 편집된 지식이 일관되게 적용되는가, (2) Locality - 비관련 지식에는 영향을 미치지 않는가, 등의 지표를 중심으로 평가된다. 
 
 
-기존 연구들은 대개 Locality 또는 Generality 중 하나에 초점을 맞추는 경향이 있다. 예를 들어 ROME은 편집의 국지적 영향 최소화를 중시하며, 반면 MEMIT은 다수의 지식을 한 번에 수정하여 범용성을 확보하는 데 주력한다. 그러나 이들 접근은 두 가지 목표 사이의 균형을 충분히 고려하지 못한다는 한계가 있다.
-본 연구에서 제안하는 Relation-aware Fine-tuning은 생성된 응답과 검색된 문장 간의 논리 관계를 정밀하게 판단하고, 해당 관계에 따라 선택적으로 fine-tuning을 수행함으로써, Locality와 Generality를 동시에 만족할 수 있도록 설계되었다.
+%기존 KME 방법론들의 한계점.
+하지만, 현재 제안된 ROME, MEMIT과 같은 기법들은 대부분 단일 문장 수준의 단순한 지식 삽입에 국한되어 있으며, 기존의 잘못된 정보를 삭제하거나 정정하는 기능은 제공하지 않는다. 
+이러한 한계는 모델 내부의 지식 충돌을 야기할 수 있으며, 결과적으로 모델의 일관성과 신뢰도를 저하시킬 가능성이 있다. 더 나아가 복잡한 다중 문장 추론이나 문맥 기반 관계성을 충분히 반영하지 못한다는 문제도 존재한다.
+기존 연구들은 대체로 Locality 또는 Generality 중 한 가지 목표에 치중하는 경향을 보인다. 예를 들어, ROME은 편집의 국지적 영향 최소화에 중점을 두는 반면, MEMIT은 다수의 지식을 동시에 수정하여 범용성을 확보하는 데 주력한다. 그러나 이러한 접근법들은 두 가지 목표 간의 균형을 충분히 고려하지 못한다는 한계가 있다. 
+결국, 기존 연구들은 각기 유용한 특성을 지니고 있음에도 불구하고, 새로운 정보가 기존 지식과 어떤 관계에 있는지를 평가하고, 그 관계에 따라 모델을 선택적으로 fine-tuning할 수 있는 구조는 아직 명확히 제시되지 않았다.
 
-이러한 Relation-aware Fine-tuning 전략은 기존 접근 방식들에 비해 다음과 같은 강력한 장점을 제공한다:
+% 본 연구의 제안. 기존 KME 방법론들과의 차이점. 달성 목표
+기존 접근법들이 지니는 다양한 제약을 종합적으로 고려할 때, 새로운 정보가 기존 지식과 어떤 논리적 관계를 가지는지를 평가하고, 그 관계 유형에 따라 fine-tuning 전략을 선택적으로 적용할 수 있는 구조적 유연성이 요구된다. 본 연구는 이러한 문제의식에 주목하여, 기존 지식을 무분별하게 삭제하거나 단순히 덮어쓰는 방식이 아니라, 정합성 있는 지식 유지와 선택적 업데이트를 모두 달성할 수 있는 Relation-aware fine-tuning이라는 새로운 학습 전략을 제안한다. 
+제안하는 방법은 Knowledge-based Model Editing(KME)의 개념을 확장한 것으로, 생성된 응답과 검색된 문장 간의 논리적 관계를 정밀하게 판별하고, 그 결과에 따라 선택적으로 fine-tuning을 수행함으로써 Locality와 Generality를 동시에 만족하도록 설계되었다.
+
+% Relation-Aware Fine-Tuning의 핵심아이디어.
+Relation-aware fine-tuning의 핵심 아이디어는 다음과 같다.
+먼저, RAG를 통해 수집된 새로운 문장과 기존 문장에 대한 모델의 출력 결과가 어떤 논리적 관계(Entailment, Contradiction, Neutral)를 가지는지를 평가한다.
+이 과정은 자연어 추론(Natural Language Inference, NLI) 기반 구조를 활용하여 자동으로 수행된다.
+특히, 새로운 문장과 기존 출력과 모순 관계(Contradiction)이거나 중립 관계(Neutral)일 경우에만 selective fine-tuning을 수행하고, 포함 관계(Entailment)는 기존 출력을 그대로 유지한다.
+또한 본 연구에서는 관계 판단 과정에서 모델의 confidence(softmax 기반 신뢰도)를 함께 고려한다. 
+Confidence가 임계값(예: τ ≥ 0.7) 이상일 때에만 관계 평가를 수행하고, 그렇지 않은 경우에는 해당 데이터를 중립 관계로 분류함으로써, 불확실한 판단에 따른 과도한 업데이트나 노이즈 반영을 방지한다.
+
+% 제안한 아이디어를 실험하기 위한 Task : Fake News Detection, 선정 이유
+본 연구는 이러한 Relation-aware fine-tuning 전략의 가능성을 검증하기 위해 COVID-19 관련 가짜 뉴스 탐지 태스크에 적용하였다. 
+기존의 단순한 fine-tuning이나 prompting 기반 방식만으로는 fake news detection과 같은 태스크에서 심각한 한계를 보일 수 있다. 특히 시의성이 중요한 가짜 뉴스 탐지에서는 정보의 진위 여부가 시간에 따라 변하거나, 상반된 사실이 동시에 존재하는 상황이 빈번하게 발생하기 때문이다.
+소셜 미디어(SNS)와 인터넷을 통해 Hallucination이 포함된 정보나 새로운 데이터가 폭발적으로 생성, 확산되고 있으며, 이러한 환경 속에서 COVID-19와 같은 급변하는 이슈에 대해 모델이 정합성 있는 판단을 내리기 위해서는 최신 정보 반영이 필수적이다. 비록 COVID-19의 유행은 전 세계적으로 다소 완화되었지만, 향후 유사한 보건 위기가 재발할 가능성은 여전히 존재한다.
+이에 따라 COVID-19 가짜 뉴스 탐지에 관한 연구는 지속적으로 이루어지고 있으며, fake news detection 시스템은 단일 시점의 정적 모델링을 넘어 새로운 정보를 반영할 수 있는 구조적 유연성과 지속적 업데이트 매커니즘을 갖추는 것이 필수적이다. 이는 초기 데이터로 학습된 모델이 시간이 지남에 따라 최신성과 정확성이 저하될 수 밖에 없다는 점에서도 분명히 드러난다.
+
+% Task에 적용한 Framework 설명
+
+COVID-19는 정보가 빠르게 변화하고, 다양한 시점에서 상반된 사실이 공존하는 특성을 지니기 때문에 가짜 뉴스 탐지 모델에는 지속적인 업데이트가 요구된다.
+그러나 모든 뉴스를 그대로 모델에 학습시키는 것은 비효율적일 뿐만 아니라, 오히려 기준을 혼란스럽게 만들 수 있다. 
+%본 연구에서는 새로운 뉴스 문장이 기존 출력과 모순될 때만 fine-tuning을 수행하도록 하여, 최소한의 학습으로 최대의 정보 반영 효과를 얻고자 하였다. 그 결과, 전체 데이터를 반복적으로 학습하지 않고도 기존 방법에 준하거나 더 나은 성능을 달성할 수 있음을 실험을 통해 확인하였다.
+이와 같이 본 논문은 RAG, Continual Learning, KME 등 기존 방법의 한계를 보완하면서 실제 응용 가능한 효율적이고 유연한 새로운 fine-tuning 패러다임을 제시한다. 
+제안된 Relation-aware Fine-tuning은 COVID-19 fake news detection에 국한되지 않고, 정보 변화가 빠르고 정합성이 중요한 다양한 도메인에 일반화될 수 있는 전략적 학습 방법이다.
+
+본 논문은 크게 두가지 축으로 구성된다. 첫째, 문장 수준의 탐지 모델을 설게하여 시의성이 중요한 가짜 뉴스에 대응할 수 있는 기반을 마련하였다. 둘째, 새로운 문장과 기존 출력 간의 관계를 자동으로 평가하고, 그 결과에 따라 선택적으로 fine-tuning을 수행하는 지식 편집 기반의 학습 전략을 제안하였다. 이를 통해 기존 정적 탐지 모델이 지니는 구조적 한계를 극복하고, 변화하는 정보 환경에 유연하게 적응 가능한 모델링 구조를 구현하였다. 
+제안하는 Relation-aware fine-tuning은 FAISS 기반의 의미 유사 문장 검색, Cross-Encoder 기반의 문맥 정합성 재랭킹, 그리고 Natural Language Inference(NLI) 기반의 관계 분류를 결합한 프레임워크이다. 특히 entailment, contradiction, neutral의 세 가지 관계를 기준으로 fine-tuning 전략을 달리하며, 모델의 softmax confidence가 일정 임계값 이상일 경우에만 관계 분석을 수행하도록 설계하였다. 이를 통해 불확실한 데이터로 인한 과도한 업데이트를 방지하고, 새로운 정보의 효과적으로 반영하면서도 기존 지식의 정합성을 보존할 수 있도록 하였다.
+
+
+
+
+%특정 layer를 찾아 fine-tuning하는 방법이 아닌 mlp layer만-- 실험을 통해서
+
+% 실험 결과 
+또한 본 연구는 관계 유형에 따라 손실 함수를 구조적으로 차별화하였다. 특히 contradiction 관계에서는 기존의 잘못된 출력을 제거하고 새로운 정보를 학습할 수 있도록, False Loss 중심의 특수 손실 함수를 도입하였다. 실험 결과 제안된 가중치를 적용한 방식은 가장 안정적인 수렴 곡선을 보였으며, 학습의 효율성과 일관성을 동시에 확보할 수 있음을 확인하였다.
+아울러 본 논문은 기존 지식의 유지와 새로운 지식의 반영 간의 균형을 평가하기 위해, ROME, MEMIT 등에서 활용된 Locality와 Generality 지표를 기반으로 편집 품질을 정량적으로 측정하였다. Locality 평가에서는 편집과 무관한 500개의 입력 중 평균 93.4\%가 기존 예측을 유지하였으며, Generality 평가에서는 편집된 쿼리와 유사한 250개 문장 중 평균 91.0\%가 동일한 방향의 출력 변화를 나타냈다. 이는 Relation-aware fine-tuning이 불필요한 파라미터 변경 없이 안정적으로 모델을 편집할 수 있음을 보여준다.
+또한, 일반 Fine-tuning과의 비교 실험을 통해 제안 기법의 실용적 가치를 입증하였다. 일반 Fine-tuning은 30,000개의 대규모 데이터를 학습해야 했던 반면, Relation-aware fine-tuning은 약 11,832개의 관계 기반 문장만으로도 유사한 정확도(96.2\%)를 달성하였다. 이는 하드웨어 자원과 시간의 제약이 큰 실제 응용 환경에서 제안 기법이 훨씬 더 적합한 접근임을 시사한다.
+결과적으로, 본 논문은 기존 접근법들이 개별적으로 지닌 장점을 통합하면서도 동시에 구조적 한계를 보완할 수 있는 포괄적이고 유연한 학습 전략을 설계하였다. 제안한 Relation-aware fine-Tuning은 단순히 COVID-19나 가짜 뉴스 탐지에 국한되지 않고, 최신 정보 반영과 지식 정합성이 동시에 요구되는 법률, 의료, 정책, 금융 등의 다양한 도메인에서 범용적으로 활용 가능한 새로운 fine-tuning 패러다임으로 기능할 수 있다. 이는 향후 신뢰 기반 AI 응용 시스템 설계의 핵심 구성 요소로 확장될 수 있다는 점에서 이론적·실용적 기여가 크다.
+
+
+% 마지막으로 새로운 방법론의 Contribution
+현재까지의 대부분의 연구는 정적인 학습-추론 구조를 전제로 하며, 새로운 정보가 유입될 때마다 전체 모델을 재학습하거나, 기존 파라미터를 완전히 대체하는 방식을 취하고 있다.이러한 접근은 실시간 대응과 비용 효율성 측면에서 근본적인 한계를 지니며, 이는 본 연구에서 제안하는 Relation-aware fine-tuning 전략이 출발하게 된 핵심 문제의식이다.
+제안하는 Relation-aware fine-tuning은 기존 접근 방식과 비교하여 다음과 같은 강점을 제공한다:
 \begin{itemize}
 	\item{\textbf{1}:
-	전체 데이터를 재학습하지 않고도 논리적 관계에 기반한 최소한의 업데이트로 최신성 확보}
+	전체 데이터를 재학습하지 않고도, 새로운 정보와 기존 지식 간의 논리적 관계에 기반한 최소한의 업데이트만으로 최신성을 유지할 수 있다.}
 
 	\item{\textbf{2}:
-	기존 지식의 유지와 새로운 지식 반영의 균형 확보}
+	기존 지식을 보존하면서도 새로운 지식을 효과적으로 반영함으로써, 지식 유지와 갱신 간의 균형을 달성한다.}
 
 	\item{\textbf{3}:
-	자원 및 연산 비용의 절감, 특히 대규모 모델에서의 효율적인 유지 관리 가능}
+	연산 자원과 학습 시간을 크게 절감할 수 있으며, 특히 대규모 언어모델에서 효율적인 유지 관리가 가능하다.}
 
 	\item{\textbf{4}:
-	데이터의 정합성 확보, 검색 기반이나 프롬프트 기반 방식에서 발생하는 논리적 비일관성 문제 최소화}
+	검색 기반이나 프롬프트 기반 방식에서 흔히 발생하는 논리적 비일관성을 최소화하여 데이터 정합성을 확보한다.}
 \end{itemize}
 
-본 연구는 이러한 Relation-aware Fine-tuning 전략의 가능성을 검증하기 위해, 이를 COVID-19 관련 가짜 뉴스 탐지 태스크에 적용하였다. 
-COVID-19는 정보가 빠르게 변화하고, 다양한 시점에서 상반되는 정보들이 등장하기 때문에, 가짜 뉴스 탐지 모델은 지속적인 업데이트가 요구된다. 
-하지만 모든 뉴스를 그대로 모델에 학습시키는 것은 비효율적이며, 오히려 모델의 기준을 혼란스럽게 만들 수 있다. 
-본 연구에서는 새로운 뉴스 문장이 기존 예측과 모순될 때만 fine-tuning을 수행하도록 하여, 최소한의 학습으로 최대의 정보 반영 효과를 얻었으며, 전체 데이터를 학습시키지 않고도 기존 방법에 준하거나 더 나은 성능을 달성할 수 있음을 실험을 통해 확인하였다.
-결과적으로, 본 논문은 지식 기반 편집, RAG, 지속 학습 등 기존 방법의 한계를 보완하면서, 실제 응용 가능한 효율적이고 유연한 새로운 fine-tuning 패러다임을 제시한다. 
-제안된 Relation-aware Fine-tuning은 단지 COVID-19나 fake news detection에 국한된 것이 아니라, 정보 변화가 빠르고 정합성이 중요한 모든 도메인에서 일반화 가능한 전략으로 활용될 수 있다.
-특정 layer를 찾아 fine-tuning하는 방법이 아닌 mlp layer만-- 실험을 통해서
-모델의 성능은 ~~~~~~~~~~~
-논문의 구조는 ~~~~~~~~~~~~~~;
 
-%2022년 아스트라제네카는 맞아도 되는 백신 현재는 안된다.
-
+% 논문의 구성
+This dissertation is structured into five main chapters, each designed to progressively build the theoretical foundation, methodological development, experimental validation, and implications of the proposed fake news detection framework. The overall structure is as follows:
+Chapter 1: Introduction outlines the motivation and background for this research, emphasizing the challenges posed by the rapid spread of fake news on social media and the limitations of existing detection approaches. It articulates the need for adaptable, knowledge-editable models in dynamic information environments such as COVID-19. The chapter concludes by detailing the core contributions of the dissertation and providing an overview of its structure.
+Chapter 2: Theoretical Background and Related Works reviews foundational studies relevant to fake news detection. It examines the evolution of detection techniques from traditional machine learning to pretrained transformer-based models and identifies gaps in adapting to rapidly changing information. This chapter also introduces key methodologies such as Pretrained Knowledge Transfer, Retrieval-Augmented Generation (RAG), and Knowledge Editing, which form the basis of the proposed model.
+Chapter 3: Method presents the technical architecture of the proposed fake sentence detection system. The chapter begins with the construction and preprocessing of a COVID-19 specific Korean dataset. It then introduces two detection models: a baseline model based on transfer learning (3.2) and an advanced model based on Relation-aware Fine-Tuning (3.3). Each model’s structure is detailed across embedding, contextual, and classification layers, including how external knowledge is retrieved and logically integrated using NLI.
+Chapter 4: Experiment and Result provides empirical validation of the proposed methods. Section 4.1 focuses on the baseline model and evaluates its performance through various metrics and ablation studies. Section 4.2 validates the Relation-aware Fine-Tuning model by comparing its accuracy, Locality, Generality, and efficiency against standard fine-tuning. Detailed ablation experiments examine the effects of model structure (encoder-only vs. decoder-included), relationship types, Cross-Encoder usage, and loss function design. Section 4.3 offers an in-depth discussion of the results, including both strengths and limitations of the proposed approach.
+Chapter 5: Conclusion and Future Work summarizes the research findings and reiterates the practical and theoretical contributions of the dissertation. It also outlines several avenues for future research, including expansion to other domains, integration with large-scale language models, and development of fully automated knowledge editing pipelines.
 %============================================================%
 % Related works						     %
 %============================================================%
