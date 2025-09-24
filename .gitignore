@@ -10,3 +10,6 @@
 *.toc
 *.pdf
 *.abs
+*.ist
+*.glo
+*.acn
