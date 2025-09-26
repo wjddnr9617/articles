@@ -139,33 +139,29 @@
 % Introduction						     %
 %============================================================%
 \section{Introduction}
-\gls{tcs}
-\gls{tcs}
-%\glsentryfull{tcs}
-\Glsentryfull{tcs}
+
 %%%%%%%%%LLM의 등장, 새로운 패러다임, 기존 Fine-Tuning의 한계점 및 해결 방안
 %오늘날 \gls{llm}의 발전은 자연어 처리 기술의 패러다임을 근본적으로 변화시켰다. 
 %수십억 개 이상의 파라미터를 가진 LLM은 질의응답, 요약, 분류, 생성 등 다양한 태스크에서 사람 수준의 성능을 보이며, 산업과 공공 분야에 이르기까지 폭넓게 활용되고 있다. 
 %그러나 이러한 놀라운 성과 뒤에는 여전히 해결되지 않은 핵심적인 기술 과제가 존재한다. 
 %이는 모델이 새로운 정보와 지식의 변화에 얼마나 신속하고 효율적으로 적응할 수 있는가이며, 동시에 그 과정에서 발생하는 자원적, 기술적 제약을 어떻게 극복할 것인가라는 문제이다.
 The rapid advancement of \gls{llm} has fundamentally transformed the paradigm of natural language processing.
-Equipped with billions of parameters, \gls{llm} demonstrate human-level performance across a wide range of tasks, including question answering, summarization, classification, and text generation, and they are now being extensively deployed in both industrial and public sectors.
-Despite these remarkable achievements, several critical challenges remain unresolved.
-A central issue lies in how effectively and efficiently these models can adapt to new information and evolving knowledge, while simultaneously overcoming the resource and technical constraints inherent in this process.
+Equipped with billions of parameters, these models achieve human-level performance across tasks such as question answering, summarization, classification, and text generation, and are now widely deployed in both industrial and public sectors.
+Despite these achievements, several critical challenges remain, particularly how efficiently models can adapt to new information and evolving contexts while managing resource and technical constraints.
 
 %기존의 Fine-tuning 방식은 새로운 데이터를 모델에 반영하는 가장 직접적이고 직관적인 접근법으로 널리 활용되어 왔다. 
 %하지만 LLM의 규모가 기하급수적으로 증가함에 따라, 전체 파라미터를 다시 학습하는 방식은 막대한 시간과 GPU 메모리, 연산 비용을 요구한다. 
 %특히 실시간성이 요구되거나 지속적으로 데이터가 유입되는 환경에서는 전체 모델을 반복적으로 재학습하는 방식이 유지보수 측면에서 현실적이지 않다. 
 %이러한 문제를 해결하기 위해, 최근에는 Full fine-tuning을 수행하지 않고도 최신 정보를 모델의 출력에 반영할 수 있는 다양한 접근이 시도되어 왔다. 
 Traditional fine-tuning has been widely adopted as the most direct and intuitive approach to incorporating new data into a model.
-However, as the scale of \gls{llm} grows exponentially, retraining the entire set of parameters demands substantial time, GPU memory, and computational resources.
-This limitation becomes particularly impractical in environments where real-time adaptability is required or where data continuously flows in, since repeatedly retraining the full model is unsustainable from a maintenance perspective.
-To address these challenges, recent research has explored a variety of approaches that can integrate up-to-date information into model outputs without resorting to full fine-tuning.
+However, as LLMs grow exponentially in scale, retraining entire parameter sets demands prohibitive time, memory, and computational resources.
+Such an approach becomes especially impractical in environments requiring real-time responsiveness or continuous data integration.
+To address these limitations, recent research has explored approaches that incorporate new knowledge into model outputs without exhaustive retraining.
 
 %대표적인 예로는 사전학습 지식을 활용하는 Transfer Learning, 순차적 학습을 지원하는 Continual Learning, 프롬프트를 조정하는 Prompt Engineering(e.g., Zero-shot, Few-shot, In-context Learning),파라미터 효율성을 강조한 Parameter-Efficient Fine-Tuning(PEFT), 외부 지식 검색을 결합한 Retrieval-Augmented Generation (RAG),그리고 특정 지식을 국소적으로 수정하는 Knowledge-Based Editing (KME) 등이 있다.
-Representative approaches include Transfer Learning, which leverages pretrained knowledge; Continual Learning, which enables sequential adaptation; Prompt Engineering (e.g., zero-shot, few-shot, and in-context learning), which adjusts model behavior through tailored prompts; \gls{peft}, which emphasizes efficiency in parameter updates; \gls{rag}, which integrates external knowledge retrieval; and \gls{kme}, which locally modifies specific knowledge within the model.
+Representative approaches include Transfer Learning, which leverages pretrained knowledge for rapid adaptation; Continual Learning, which supports sequential updates while retaining prior representations; Prompt Engineering (e.g., zero-shot, few-shot, and in-context learning), which steers model behavior through designed prompts; \gls{peft}, which emphasizes lightweight parameter updates; \gls{rag}, which enriches outputs with external sources;
+ and \gls{kme}, which locally modifies specific knowledge within the model.
 %%표 삽입?
-
 
 %%%%%%% 새로운 해결방안들의 한계, KME 등장, KME특징
 %Transfer Learning은 사전학습 지식을 활용하여 새로운 태스크에 빠르게 적응할 수 있는 효과적인 방법이지만, 여전히 대규모 파라미터를 다시 학습해야하는 경우가 많아 자원 소모가 크다는 단점을 갖는다.
@@ -173,138 +169,117 @@ Representative approaches include Transfer Learning, which leverages pretrained 
 %RAG는 외부 지식을 검색해 조건으로 활용함으로써 유연한 지식 반영이 가능하지만, 생성 결과의 정합성을 보장하기 어렵고, 논리적으로 일관되지 않은 응답을 생성할 수 있다. 또한, 이는 모델 파라미터 자체를 갱신하는 방식이 아니므로, 시간이 지나거나 외부 문서가 소실되면 지식이 사라진다는 한계가 있다. 
 %Zero-shot이나 Few-shot prompting과 같은 프롬프트 기반 접근 역시 빠르고 유연하다는 장점이 있으나, 추론이나 정합성이 중요한 작업에서는 불안정한 성능을 보이기 쉽다. 이 또한 파라미터 튜닝이 수반되지 않는다는 점에서 본질적인 한계를 가진다.
 %한편, LoRA(Low Rank Adaptation)와 같은 adaptive layer 기반 기법은 전체 파라미터를 학습하는 대신 저차원 랭크 공간만 조정하여 연산 자원을 절감하면서도 fine-tuning 효과를 얻을 수 있도록한다. 그럼에도 불구하고, 새로운 지식을 모델 내부에 충분히 반영하는 작업은 여전히 어려운 과제로 남아 있다.
+While each method has unique advantages, significant drawbacks remain.
+Transfer Learning is an effective method that leverages pretrained knowledge to quickly adapt to new tasks; however, it often still requires retraining a large number of parameters, resulting in significant resource consumption.
+Continual Learning appears to be an ideal approach in that it enables sequential learning while retaining prior knowledge, yet it suffers from severe limitations such as catastrophic forgetting and sensitivity to data order.
+\gls{rag} allows flexible incorporation of external knowledge by conditioning on retrieved documents, but it struggles to guarantee consistency in generated outputs and may produce logically incoherent responses. Moreover, since \gls{rag} does not update model parameters, the acquired knowledge may vanish once external sources become outdated or unavailable.
+Prompt-based approaches such as zero-shot and few-shot prompting offer speed and flexibility, but they often yield unstable performance in tasks that require rigorous reasoning and consistency. This limitation also stems from the absence of parameter updates, representing a fundamental drawback.
+Meanwhile, adaptive layer-based methods such as \gls{lora} reduce computational costs by tuning only low-dimensional rank spaces rather than all parameters, while still achieving fine-tuning effects. Nevertheless, fully embedding new knowledge within the model remains a challenging problem.
+
 %이러한 배경 속에서 최근 주목받고 있는 방법이 바로 Knowledge-Based Model Editing (KME)이다.
 %KME는 대규모 언어 모델(LLM)의 지식 기반을 효율적으로 수정하는 방법론으로, 전체 모델을 재학습하지 않고도 특정 지식을 반영할 수 있다.
 %이를 통해 LLM의 응답 신뢰성을 높이고, 최신 정보를 반영하며 실질적인 요구를 충족시킬 수 있다.
 %특히, KME는 인간의 학습 단계를 참고하여 세 가지 위상으로 구분된다: Recognition, Association, Mastery. Recognition Phase는 외부 지식을 검색하거나 삽입해 모델이 새로운 정보를 인식하게 하며, RAG나 In-context Learning이 대표적이다. Association Phase에서는 LoRA나 adapter와 같은 기법을 통해 새로운 지식을 모델의 표현 공간에 연결한다.마지막으로 Mastery Phase에서는 모델의 파라미터를 직접 수정하여 지식을 완전히 내재화하며, ROME, MEMIT, MEND 등이 대표적인 기법에 해당된다.
 %이러한 KME 기법들은 일반적으로 (1) Generality - 다양한 입력 상황에서도 편집된 지식이 일관되게 적용되는가, (2) Locality - 비관련 지식에는 영향을 미치지 않는가, 등의 지표를 중심으로 평가된다. 
-Transfer Learning is an effective method that leverages pretrained knowledge to quickly adapt to new tasks; however, it often still requires retraining a large number of parameters, resulting in significant resource consumption.
-
-Continual Learning appears to be an ideal approach in that it enables sequential learning while retaining prior knowledge, yet it suffers from severe limitations such as catastrophic forgetting and sensitivity to data order.
-
-\gls{rag} allows flexible incorporation of external knowledge by conditioning on retrieved documents, but it struggles to guarantee consistency in generated outputs and may produce logically incoherent responses. Moreover, since \gls{rag} does not update model parameters, the acquired knowledge may vanish once external sources become outdated or unavailable.
-
-Prompt-based approaches such as zero-shot and few-shot prompting offer speed and flexibility, but they often yield unstable performance in tasks that require rigorous reasoning and consistency. This limitation also stems from the absence of parameter updates, representing a fundamental drawback.
-
-Meanwhile, adaptive layer-based methods such as \gls{lora} reduce computational costs by tuning only low-dimensional rank spaces rather than all parameters, while still achieving fine-tuning effects. Nevertheless, fully embedding new knowledge within the model remains a challenging problem.
-
-Amid these challenges, a recently emerging approach that has attracted considerable attention is \gls{kme}.
-\gls{kme} provides a methodology for efficiently modifying the knowledge base of \gls{llm}, enabling the incorporation of specific knowledge without retraining the entire model. This approach enhances the reliability of \gls{llm} responses, facilitates the integration of up-to-date information, and better addresses practical demands.
-
-In particular, \gls{kme} is often conceptualized in three phases inspired by human learning processes: Recognition, Association, and Mastery.
-
-The Recognition Phase involves retrieving or injecting external knowledge so that the model can recognize new information, with \gls{rag} and in-context learning serving as representative techniques.The Association Phase connects new knowledge to the model's representation space through methods such as \gls{lora}and adapters. Finally, the Mastery Phase directly modifies model parameters to fully internalize knowledge, with approaches such as ROME, MEMIT, and MEND representing this category.
-
-These KME techniques are generally evaluated using two primary criteria: (1) Generality—whether the edited knowledge is applied consistently across diverse input scenarios, and (2) Locality—whether the editing process avoids unintended influence on unrelated knowledge.
+Amid these challenges, \gls{kme} has emerged as a promising direction.
+It offers mechanisms to update specific knowledge efficiently without retraining full models, thereby enhancing reliability, ensuring recency, and addressing practical needs.
+\gls{kme} is commonly conceptualized in three phases inspired by human learning: Recognition(retrieving or inserting new content, e.g., \gls{rag} or in-context learning), Association(linking information to representation space, e.g., \gls{lora} or adapters), and Mastery(direct parameter editing, e.g., ROME, MEMIT, MEND).
+These techniques are typically assessed by Generality, which measures whether edited knowledge applies consistently across inputs, and Locality, which evaluates whether unrelated knowledge remains unaffected.
 
 %%%%%%% 기존 KME 방법론들의 한계점.
 하지만, 현재 제안된 ROME, MEMIT과 같은 기법들은 대부분 단일 문장 수준의 단순한 지식 삽입에 국한되어 있으며, 기존의 잘못된 정보를 삭제하거대규모 언어 모델(Large Language Models, LLMs)
 
 %%%%%%% 본 연구의 제안. 기존 KME 방법론들과의 차이점. 달성 목표
 %기존 접근법들이 지니는 다양한 제약을 종합적으로 고려할 때, 새로운 정보가 기존 지식과 어떤 논리적 관계를 가지는지를 평가하고, 그 관계 유형에 따라 fine-tuning 전략을 선택적으로 적용할 수 있는 구조적 유연성이 요구된다. 본 연구는 이러한 문제의식에 주목하여, 기존 지식을 무분별하게 삭제하거나 단순히 덮어쓰는 방식이 아니라, 정합성 있는 지식 유지와 선택적 업데이트를 모두 달성할 수 있는 Relation-aware fine-tuning이라는 새로운 학습 전략을 제안한다. 
-Considering the diverse limitations of existing approaches, there is a pressing need for structural flexibility that can evaluate the logical relationship between newly acquired information and prior knowledge, and selectively apply fine-tuning strategies according to the identified relation type.
-Motivated by this perspective, this study proposes a novel learning strategy called \gls{raft}, which aims not to indiscriminately overwrite or erase prior knowledge, but rather to achieve both consistent knowledge retention and selective updating.
+Considering the diverse limitations of existing approaches, there is a pressing need for structural flexibility that can evaluate the logical relationship between newly acquired content and pre-existing representations, and selectively apply adaptation strategies according to the identified relation type.
+Motivated by this perspective, this study proposes a novel learning paradigm termed \gls{raft}, which is designed not to indiscriminately overwrite or erase prior representations, but rather to achieve both stable retention and selective updating.
 
 %제안하는 방법은 Knowledge-based Model Editing(KME)의 개념을 확장한 것으로, 생성된 응답과 검색된 문장 간의 논리적 관계를 정밀하게 판별하고, 그 결과에 따라 선택적으로 fine-tuning을 수행함으로써 Locality와 Generality를 동시에 만족하도록 설계되었다.
-The proposed approach extends the concept of \gls{kme} by precisely identifying the logical relationships between generated responses and retrieved sentences, and selectively applying fine-tuning based on these relationships. This design aims to simultaneously satisfy the criteria of Locality and Generality.
+The proposed method extends the concept of \gls{kme} by explicitly identifying the logical dependencies between generated responses and retrieved sentences, and applying parameter updates in a selective manner. This design is intended to satisfy the dual criteria of Locality and Generality.
 
 %%%%%% Relation-Aware Fine-Tuning의 핵심아이디어.
 %Relation-aware fine-tuning의 핵심 아이디어는 다음과 같다.
 %먼저, RAG를 통해 수집된 새로운 문장과 기존 문장에 대한 모델의 출력 결과가 어떤 논리적 관계(Entailment, Contradiction, Neutral)를 가지는지를 평가한다.
 %이 과정은 자연어 추론(Natural Language Inference, NLI) 기반 구조를 활용하여 자동으로 수행된다.
-The core idea of \gls{raft} is as follows.
-First, the logical relationship—Entailment, Contradiction, or Neutral—between the model's output for existing sentences and newly retrieved sentences collected through \gls{rag} is evaluated. This process is performed automatically by leveraging a \gls{nli}-based framework.
-
 %특히, 새로운 문장과 기존 출력과 모순 관계(Contradiction)이거나 중립 관계(Neutral)일 경우에만 selective fine-tuning을 수행하고, 포함 관계(Entailment)는 기존 출력을 그대로 유지한다.
+The core idea of \gls{raft} is as follows.
+First, the logical relation between the model's prediction for existing sentences and newly retrieved evidence obtained through \gls{rag} is evaluated. The relation is categorized into three types: entailment, contradiction, and neutral. This process is performed automatically using a \gls{nli} framework.
+Selective fine-tuning is then applied only when the detected relation is contradiction or neutral, while entailment cases preserve the original output.
+
 %또한 본 연구에서는 관계 판단 과정에서 모델의 confidence(softmax 기반 신뢰도)를 함께 고려한다. 
 %Confidence가 임계값(예: τ ≥ 0.7) 이상일 때에만 관계 평가를 수행하고, 그렇지 않은 경우에는 해당 데이터를 중립 관계로 분류함으로써, 불확실한 판단에 따른 과도한 업데이트나 노이즈 반영을 방지한다.
-In particular, selective fine-tuning is performed only when the relationship between the newly retrieved sentence and the existing output is identified as Contradiction or Neutral, while the existing output is preserved in the case of Entailment.
-Furthermore, this study incorporates the model's confidence, measured by a softmax-based probability, into the relation assessment process.
-The relation assessment is performed only when the model's confidence exceeds a predefined threshold (e.g., τ ≥ 0.7).
-If the confidence falls below this threshold, the corresponding data are classified as Neutral, thereby preventing excessive updates or the incorporation of noise arising from uncertain judgments.
+(수정필요) 중립관계일때만이 아니라, 모순관계일때도 
 
+Furthermore, the proposed framework incorporates model confidence, measured through softmax probabilities, into the decision process. Relation assessment is performed only when confidence exceeds a predefined threshold (for example, τ ≥ 0.7). If the confidence falls below this threshold, the instance is classified as neutral, thereby preventing unnecessary parameter adjustments or the propagation of noise arising from uncertain predictions.
 
 %%%%%%% 제안한 아이디어를 실험하기 위한 Task : Fake News Detection, 선정 이유
 %본 연구는 이러한 Relation-aware fine-tuning 전략의 가능성을 검증하기 위해 COVID-19 관련 가짜 뉴스 탐지 태스크에 적용하였다. 
 %기존의 단순한 fine-tuning이나 prompting 기반 방식만으로는 fake news detection과 같은 태스크에서 심각한 한계를 보일 수 있다. 특히 시의성이 중요한 가짜 뉴스 탐지에서는 정보의 진위 여부가 시간에 따라 변하거나, 상반된 사실이 동시에 존재하는 상황이 빈번하게 발생하기 때문이다.
-To validate the feasibility of the proposed \gls{raft} strategy, we applied it to the task of COVID-19-related fake news detection.
-Conventional approaches relying solely on simple fine-tuning or prompt-based methods often face severe limitations in such tasks.
-This is particularly evident in fake news detection, where temporal relevance is critical, since the veracity of information may change over time and conflicting facts frequently coexist.
+To validate the feasibility of \gls{raft}, we applied it to the task of COVID-19 misinformation detection. Traditional retraining or prompt-based methods often encounter severe limitations in this domain, where temporal relevance is crucial, the factual status of information frequently evolves, and conflicting claims coexist.
 
 %소셜 미디어(SNS)와 인터넷을 통해 Hallucination이 포함된 정보나 새로운 데이터가 폭발적으로 생성, 확산되고 있으며, 이러한 환경 속에서 COVID-19와 같은 급변하는 이슈에 대해 모델이 정합성 있는 판단을 내리기 위해서는 최신 정보 반영이 필수적이다. 비록 COVID-19의 유행은 전 세계적으로 다소 완화되었지만, 향후 유사한 보건 위기가 재발할 가능성은 여전히 존재한다.
 %이에 따라 COVID-19 가짜 뉴스 탐지에 관한 연구는 지속적으로 이루어지고 있으며, fake news detection 시스템은 단일 시점의 정적 모델링을 넘어 새로운 정보를 반영할 수 있는 구조적 유연성과 지속적 업데이트 매커니즘을 갖추는 것이 필수적이다. 이는 초기 데이터로 학습된 모델이 시간이 지남에 따라 최신성과 정확성이 저하될 수 밖에 없다는 점에서도 분명히 드러난다.
-Through social media (SNS) and the internet, information containing hallucinations as well as newly emerging data is being generated and disseminated at an explosive pace.
-In such an environment, it is essential for models to incorporate the latest information in order to make consistent and reliable judgments on rapidly evolving issues such as COVID-19.
-Although the global spread of COVID-19 has somewhat subsided, the possibility of similar public health crises reoccurring in the future remains high.
-Accordingly, research on COVID-19 fake news detection continues to be actively pursued, and fake news detection systems must move beyond static, single-point modeling to incorporate structural flexibility and mechanisms for continuous updates.
-This necessity becomes evident in the fact that models trained solely on initial datasets inevitably suffer degradation in both recency and accuracy over time.
+With the explosive growth of user-generated content on social media and the internet, including hallucinated outputs and rapidly emerging data, it has become essential for models to incorporate up-to-date evidence in order to generate reliable judgments on dynamic issues such as COVID-19. Although the global pandemic has subsided to some extent, the likelihood of future public health crises remains significant. Accordingly, misinformation detection continues to be an active research area, and detection systems must evolve beyond static modeling to embrace flexible structures and mechanisms for continuous adaptation. The necessity of such approaches is underscored by the inevitable decline in both temporal validity and predictive accuracy when models rely solely on initial training datasets.
 
 %%%%%% Task에 적용한 Framework 설명
 %COVID-19는 정보가 빠르게 변화하고, 다양한 시점에서 상반된 사실이 공존하는 특성을 지니기 때문에 가짜 뉴스 탐지 모델에는 지속적인 업데이트가 요구된다.
 %그러나 모든 뉴스를 그대로 모델에 학습시키는 것은 비효율적일 뿐만 아니라, 오히려 기준을 혼란스럽게 만들 수 있다. 
-Because COVID-19 is characterized by rapidly evolving information and the coexistence of conflicting facts at different points in time, fake news detection models require continuous updates.
-However, indiscriminately incorporating all news into the model is not only inefficient but may also obscure decision boundaries and introduce confusion into the system.
+Because COVID-19 is characterized by rapidly shifting information and the coexistence of contradictory claims across different timeframes, detection models must be continually updated. However, indiscriminate incorporation of all news articles is inefficient and risks distorting decision boundaries, thereby introducing confusion into the system.
 
 (수정필요)본 연구에서는 새로운 뉴스 문장이 기존 출력과 모순될 때만 fine-tuning을 수행하도록 하여, 최소한의 학습으로 최대의 정보 반영 효과를 얻고자 하였다. 그 결과, 전체 데이터를 반복적으로 학습하지 않고도 기존 방법에 준하거나 더 나은 성능을 달성할 수 있음을 실험을 통해 확인하였다.
 
 %이와 같이 본 논문은 RAG, Continual Learning, KME 등 기존 방법의 한계를 보완하면서 실제 응용 가능한 효율적이고 유연한 새로운 fine-tuning 패러다임을 제시한다. 
 %제안된 Relation-aware Fine-tuning은 COVID-19 fake news detection에 국한되지 않고, 정보 변화가 빠르고 정합성이 중요한 다양한 도메인에 일반화될 수 있는 전략적 학습 방법이다.
-In this way, the present study introduces a novel fine-tuning paradigm that is both efficient and flexible, complementing the limitations of existing approaches such as \gls{rag}, Continual Learning, and \gls{kme}, while remaining practically applicable.
-The proposed \gls{raft} is not confined to COVID-19 fake news detection, but rather constitutes a strategic learning method that can be generalized to a wide range of domains where information evolves rapidly and consistency is of critical importance.
+In this context, the present study introduces a fine-tuning paradigm that is both efficient and adaptive, complementing the shortcomings of methods such as \gls{rag}, Continual Learning, and \gls{kme}, while remaining practically applicable. \gls{raft} is not confined to COVID-19 misinformation detection but represents a principled strategy that can be generalized to domains where information evolves rapidly and factual coherence is critical, including law, medicine, finance, and policy.
 
 %본 논문은 크게 두가지 축으로 구성된다. 첫째, 문장 수준의 탐지 모델을 설게하여 시의성이 중요한 가짜 뉴스에 대응할 수 있는 기반을 마련하였다. 둘째, 새로운 문장과 기존 출력 간의 관계를 자동으로 평가하고, 그 결과에 따라 선택적으로 fine-tuning을 수행하는 지식 편집 기반의 학습 전략을 제안하였다. 이를 통해 기존 정적 탐지 모델이 지니는 구조적 한계를 극복하고, 변화하는 정보 환경에 유연하게 적응 가능한 모델링 구조를 구현하였다. 
-This paper is structured around two main contributions.
-First, we designed a sentence-level detection model to establish a foundation for addressing time-sensitive fake news.
-Second, we propose a \gls{raft} strategy that automatically evaluates the relationship between new sentences and existing outputs, and selectively performs fine-tuning based on the identified relation.
-Through these contributions, the study overcomes the structural limitations of conventional static detection models and realizes a modeling framework that can flexibly adapt to dynamic information environments.
+This paper is organized around two main contributions.
+First, we designed a sentence-level detection model to establish a foundation for addressing time-sensitive fake news tasks.
+Second, we propose the \gls{raft} strategy, which automatically evaluates the relation between new sentences and existing outputs, and selectively updates parameters according to the detected relation. Through these contributions, the study addresses the structural limitations of static detection systems and implements a framework capable of flexibly adapting to dynamic information environments.
 
 %제안하는 Relation-aware fine-tuning은 FAISS 기반의 의미 유사 문장 검색, Cross-Encoder 기반의 문맥 정합성 재랭킹, 그리고 Natural Language Inference(NLI) 기반의 관계 분류를 결합한 프레임워크이다. 특히 entailment, contradiction, neutral의 세 가지 관계를 기준으로 fine-tuning 전략을 달리하며, 모델의 softmax confidence가 일정 임계값 이상일 경우에만 관계 분석을 수행하도록 설계하였다. 이를 통해 불확실한 데이터로 인한 과도한 업데이트를 방지하고, 새로운 정보의 효과적으로 반영하면서도 기존 지식의 정합성을 보존할 수 있도록 하였다.
-The proposed \gls{raft} is a framework that integrates FAISS-based semantic similarity retrieval, cross-encoder-based contextual re-ranking, and \gls{nli}-based relation classification.
-In particular, the fine-tuning strategy is differentiated according to three relation types: entailment, contradiction, and neutral. Relation analysis is performed only when the model's softmax confidence exceeds a predefined threshold.
-This design prevents excessive updates caused by uncertain data, enabling the effective incorporation of new information while preserving the consistency of existing knowledge.
+(수정필요) 일정 임계값 밑일때도 수행
+
+The \gls{raft} framework integrates three key components: FAISS-based semantic similarity retrieval, cross-encoder-based contextual re-ranking, and \gls{nli}-driven relation classification. The fine-tuning process is differentiated according to the three relation types of entailment, contradiction, and neutral, and is executed only when model confidence surpasses a predefined threshold. This design minimizes spurious updates arising from low-certainty predictions, allowing effective incorporation of novel evidence while preserving the integrity of existing representations.
 
 %%%%%% 실험 결과 
 %또한 본 연구는 관계 유형에 따라 손실 함수를 구조적으로 차별화하였다. 특히 contradiction 관계에서는 기존의 잘못된 출력을 제거하고 새로운 정보를 학습할 수 있도록, False Loss 중심의 특수 손실 함수를 도입하였다. 실험 결과 제안된 가중치를 적용한 방식은 가장 안정적인 수렴 곡선을 보였으며, 학습의 효율성과 일관성을 동시에 확보할 수 있음을 확인하였다.
-In addition, this study structurally differentiates the loss function according to the identified relation type.
-In particular, for the contradiction relation, a specialized loss function centered on False Loss was introduced to suppress prior incorrect outputs and facilitate the learning of new information.
-Experimental results demonstrate that the proposed weighting scheme yields the most stable convergence curve, confirming its ability to achieve both efficiency and consistency in training.
+In addition, \gls{raft} structurally differentiates the loss function according to relation type. Specifically, for contradiction cases, a specialized objective emphasizing False Loss was introduced to suppress prior erroneous outputs and facilitate the assimilation of new information. Experimental results show that the proposed weighting scheme yields the most stable convergence, ensuring both efficiency and training consistency.
 
 %아울러 본 논문은 기존 지식의 유지와 새로운 지식의 반영 간의 균형을 평가하기 위해, ROME, MEMIT 등에서 활용된 Locality와 Generality 지표를 기반으로 편집 품질을 정량적으로 측정하였다. Locality 평가에서는 편집과 무관한 500개의 입력 중 평균 93.4\%가 기존 예측을 유지하였으며, Generality 평가에서는 편집된 쿼리와 유사한 250개 문장 중 평균 91.0\%가 동일한 방향의 출력 변화를 나타냈다. 이는 Relation-aware fine-tuning이 불필요한 파라미터 변경 없이 안정적으로 모델을 편집할 수 있음을 보여준다.
-Furthermore, to evaluate the balance between retaining prior knowledge and incorporating new knowledge, we quantitatively measured editing quality based on the Locality and Generality metrics, which have also been employed in approaches such as ROME and MEMIT.
-In the Locality evaluation, an average of 93.4\% of 500 inputs unrelated to the edits preserved their original predictions, while in the Generality evaluation, an average of 91.0\% of 250 sentences semantically similar to the edited queries exhibited consistent directional changes in their outputs.
-These results demonstrate that \gls{raft} can reliably edit the model without unnecessary parameter modifications.
+(수정필요) 수치확인
+
+To assess the trade-off between preserving prior knowledge and integrating new information, we quantitatively evaluated editing quality using the Locality and Generality metrics, as employed in approaches such as ROME and MEMIT. In the Locality evaluation, an average of 93.4\% of 500 unrelated inputs preserved their original predictions, while in the Generality evaluation, 91.0\% of 250 sentences semantically related to edited queries exhibited consistent directional changes. These findings confirm that /gls{raft} can reliably update models without unnecessary parameter modifications.
 
 %또한, 일반 Fine-tuning과의 비교 실험을 통해 제안 기법의 실용적 가치를 입증하였다. 일반 Fine-tuning은 30,000개의 대규모 데이터를 학습해야 했던 반면, Relation-aware fine-tuning은 약 11,832개의 관계 기반 문장만으로도 유사한 정확도(96.2\%)를 달성하였다. 이는 하드웨어 자원과 시간의 제약이 큰 실제 응용 환경에서 제안 기법이 훨씬 더 적합한 접근임을 시사한다.
 %결과적으로, 본 논문은 기존 접근법들이 개별적으로 지닌 장점을 통합하면서도 동시에 구조적 한계를 보완할 수 있는 포괄적이고 유연한 학습 전략을 설계하였다. 
-In addition, comparative experiments with conventional fine-tuning validated the practical value of the proposed method.
-Whereas standard fine-tuning required training on a large dataset of 30,000 samples, \gls{raft} achieved comparable accuracy (96.2\%) using only about 11,832 relation-based sentences.
-This finding suggests that the proposed approach is far more suitable for real-world applications where hardware resources and time are severely constrained.
-Consequently, this study presents a comprehensive and flexible learning strategy that not only integrates the strengths of existing approaches but also addresses their structural limitations.
+(수정필요) 수치확인
+
+Comparative experiments further validated the practical value of /gls{raft}. Whereas conventional fine-tuning required training on all 30,000 samples, \gls{raft} achieved comparable accuracy (96.2\%) with only 11,832 relation-based sentences. This demonstrates its suitability for real-world scenarios where computational resources and time are limited.
 
 %제안한 Relation-aware fine-Tuning은 단순히 COVID-19나 가짜 뉴스 탐지에 국한되지 않고, 최신 정보 반영과 지식 정합성이 동시에 요구되는 법률, 의료, 정책, 금융 등의 다양한 도메인에서 범용적으로 활용 가능한 새로운 fine-tuning 패러다임으로 기능할 수 있다. 이는 향후 신뢰 기반 AI 응용 시스템 설계의 핵심 구성 요소로 확장될 수 있다는 점에서 이론적·실용적 기여가 크다.
 The proposed /gls{raft} is not confined to COVID-19 or fake news detection; rather, it can serve as a generalizable fine-tuning paradigm applicable across diverse domains such as law, medicine, policy, and finance, where both the integration of up-to-date information and the maintenance of knowledge consistency are simultaneously required.
 This underscores its substantial theoretical and practical contributions, as it can be extended to function as a core component in the design of future trust-based AI application systems.
 
+Consequently, this paper presents a comprehensive and flexible learning paradigm that integrates the strengths of prior approaches while addressing their inherent limitations. Beyond the specific case of COVID-19, \gls{raft} provides a generalizable framework for domains requiring both rapid knowledge integration and factual consistency. Its balance between retention and adaptation highlights its potential to serve as a cornerstone in the design of future trustworthy AI systems.
+
 %%%%%% 마지막으로 새로운 방법론의 Contribution
 %현재까지의 대부분의 연구는 정적인 학습-추론 구조를 전제로 하며, 새로운 정보가 유입될 때마다 전체 모델을 재학습하거나, 기존 파라미터를 완전히 대체하는 방식을 취하고 있다.이러한 접근은 실시간 대응과 비용 효율성 측면에서 근본적인 한계를 지니며, 이는 본 연구에서 제안하는 Relation-aware fine-tuning 전략이 출발하게 된 핵심 문제의식이다.
 %제안하는 Relation-aware fine-tuning은 기존 접근 방식과 비교하여 다음과 같은 강점을 제공한다:
-To date, most studies have assumed a static learning-inference structure, in which the model is either fully retrained whenever new information becomes available or its existing parameters are completely replaced.
-Such approaches face fundamental limitations in terms of real-time responsiveness and cost efficiency, which constitute the central motivation behind the Relation-Aware Fine-Tuning strategy proposed in this study.
-Compared with conventional methods, the proposed \gls{raft} offers the following advantages:
-
+To date, most prior studies have assumed a static learning-inference paradigm, in which models are either fully retrained whenever new information arises or their parameters are entirely replaced. Such strategies face inherent constraints in terms of real-time responsiveness and cost-efficiency, which form the central motivation for the RAFT strategy proposed in this work. Compared with conventional methods, /gls{raft} offers the following advantages:
 \begin{itemize}
 	\item{\textbf{1}:
 	%전체 데이터를 재학습하지 않고도, 새로운 정보와 기존 지식 간의 논리적 관계에 기반한 최소한의 업데이트만으로 최신성을 유지할 수 있다.}
-    Without retraining on the entire dataset, the model can maintain recency by performing only minimal updates based on the logical relationship between new information and existing knowledge.}
+    Maintaining model recency through minimal updates guided by logical relationships between newly acquired information and existing knowledge, without retraining on the entire dataset.}
 	\item{\textbf{2}:
 	%기존 지식을 보존하면서도 새로운 지식을 효과적으로 반영함으로써, 지식 유지와 갱신 간의 균형을 달성한다.}
-    By preserving prior knowledge while effectively incorporating new information, the model achieves a balance between knowledge retention and update.}
+    Balancing knowledge retention and update by preserving prior representations while effectively integrating new evidence.}
 	\item{\textbf{3}:
 	%연산 자원과 학습 시간을 크게 절감할 수 있으며, 특히 대규모 언어모델에서 효율적인 유지 관리가 가능하다.}
-    It substantially reduces computational resources and training time, enabling efficient maintenance particularly in large-scale language models.}
+    Enhancing efficiency in large-scale language models by substantially reducing computational resources and training time required for maintenance.}
 	\item{\textbf{4}:
 	%검색 기반이나 프롬프트 기반 방식에서 흔히 발생하는 논리적 비일관성을 최소화하여 데이터 정합성을 확보한다.}
-    It minimizes the logical inconsistencies commonly observed in retrieval-based or prompt-based approaches, thereby ensuring data consistency.}
+    Ensuring data consistency by minimizing the logical inconsistencies that are commonly observed in retrieval-based and prompt-based approaches.}
 \end{itemize}
 
 
