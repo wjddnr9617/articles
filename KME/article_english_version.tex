@@ -51,11 +51,14 @@
 \newacronym{raft}{Relation-aware Fine-Tuning}{Relation-aware Fine-Tuning}
 \newacronym{lora}{LoRA}{Low Rank Adaptation}
 \newacronym{rnn}{RNN}{Recurrent Neural Network}
+\newacronym{lstm}{LSTM}{Long Short-Term Memory}
 \newacronym{cnn}{CNN}{Convolutional Neural Network}
 \newacronym{plm}{PLM}{Pretrained Language Model}
 \newacronym{bert}{BERT}{Bidirectional Encoder Representations from Transformers}
 \newacronym{kobart}{KoBART}{Korean Bidirectional and Auto-Regressive Transformer}
 \newacronym{bart}{BART}{Bidirectional and Auto-Regressive Transformer}
+\newacronym{faiss}{FAISS}{Facebook AI Similarity Search}
+
 %%%Author macros
 % \def\tsc#1{\csdef{#1}{\textsc{\lowercase{#1}}\xspace}}
 % \tsc{WGM}
@@ -240,7 +243,7 @@ Second, we propose the \gls{raft} strategy, which automatically evaluates the re
 %제안하는 Relation-aware fine-tuning은 FAISS 기반의 의미 유사 문장 검색, Cross-Encoder 기반의 문맥 정합성 재랭킹, 그리고 Natural Language Inference(NLI) 기반의 관계 분류를 결합한 프레임워크이다. 특히 entailment, contradiction, neutral의 세 가지 관계를 기준으로 fine-tuning 전략을 달리하며, 모델의 softmax confidence가 일정 임계값 이상일 경우에만 관계 분석을 수행하도록 설계하였다. 이를 통해 불확실한 데이터로 인한 과도한 업데이트를 방지하고, 새로운 정보의 효과적으로 반영하면서도 기존 지식의 정합성을 보존할 수 있도록 하였다.
 (수정필요) 일정 임계값 밑일때도 수행
 
-The \gls{raft} framework integrates three key components: FAISS-based semantic similarity retrieval, cross-encoder-based contextual re-ranking, and \gls{nli}-driven relation classification. The fine-tuning process is differentiated according to the three relation types of entailment, contradiction, and neutral, and is executed only when model confidence surpasses a predefined threshold. This design minimizes spurious updates arising from low-certainty predictions, allowing effective incorporation of novel evidence while preserving the integrity of existing representations.
+The \gls{raft} framework integrates three key components: \gls{faiss}-based semantic similarity retrieval, cross-encoder-based contextual re-ranking, and \gls{nli}-driven relation classification. The fine-tuning process is differentiated according to the three relation types of entailment, contradiction, and neutral, and is executed only when model confidence surpasses a predefined threshold. This design minimizes spurious updates arising from low-certainty predictions, allowing effective incorporation of novel evidence while preserving the integrity of existing representations.
 
 %%%%%% 실험 결과 
 %또한 본 연구는 관계 유형에 따라 손실 함수를 구조적으로 차별화하였다. 특히 contradiction 관계에서는 기존의 잘못된 출력을 제거하고 새로운 정보를 학습할 수 있도록, False Loss 중심의 특수 손실 함수를 도입하였다. 실험 결과 제안된 가중치를 적용한 방식은 가장 안정적인 수렴 곡선을 보였으며, 학습의 효율성과 일관성을 동시에 확보할 수 있음을 확인하였다.
@@ -249,7 +252,7 @@ In addition, \gls{raft} structurally differentiates the loss function according 
 %아울러 본 논문은 기존 지식의 유지와 새로운 지식의 반영 간의 균형을 평가하기 위해, ROME, MEMIT 등에서 활용된 Locality와 Generality 지표를 기반으로 편집 품질을 정량적으로 측정하였다. Locality 평가에서는 편집과 무관한 500개의 입력 중 평균 93.4\%가 기존 예측을 유지하였으며, Generality 평가에서는 편집된 쿼리와 유사한 250개 문장 중 평균 91.0\%가 동일한 방향의 출력 변화를 나타냈다. 이는 Relation-aware fine-tuning이 불필요한 파라미터 변경 없이 안정적으로 모델을 편집할 수 있음을 보여준다.
 (수정필요) 수치확인
 
-To assess the trade-off between preserving prior knowledge and integrating new information, we quantitatively evaluated editing quality using the Locality and Generality metrics, as employed in approaches such as ROME and MEMIT. In the Locality evaluation, an average of 93.4\% of 500 unrelated inputs preserved their original predictions, while in the Generality evaluation, 91.0\% of 250 sentences semantically related to edited queries exhibited consistent directional changes. These findings confirm that /gls{raft} can reliably update models without unnecessary parameter modifications.
+To assess the trade-off between preserving prior knowledge and integrating new information, we quantitatively evaluated editing quality using the Locality and Generality metrics, as employed in approaches such as ROME and MEMIT. In the Locality evaluation, an average of 93.4\% of 500 unrelated inputs preserved their original predictions, while in the Generality evaluation, 91.0\% of 250 sentences semantically related to edited queries exhibited consistent directional changes. These findings confirm that \gls{raft} can reliably update models without unnecessary parameter modifications.
 
 %또한, 일반 Fine-tuning과의 비교 실험을 통해 제안 기법의 실용적 가치를 입증하였다. 일반 Fine-tuning은 30,000개의 대규모 데이터를 학습해야 했던 반면, Relation-aware fine-tuning은 약 11,832개의 관계 기반 문장만으로도 유사한 정확도(96.2\%)를 달성하였다. 이는 하드웨어 자원과 시간의 제약이 큰 실제 응용 환경에서 제안 기법이 훨씬 더 적합한 접근임을 시사한다.
 %결과적으로, 본 논문은 기존 접근법들이 개별적으로 지닌 장점을 통합하면서도 동시에 구조적 한계를 보완할 수 있는 포괄적이고 유연한 학습 전략을 설계하였다. 
@@ -267,29 +270,29 @@ Consequently, this paper presents a comprehensive and flexible learning paradigm
 %현재까지의 대부분의 연구는 정적인 학습-추론 구조를 전제로 하며, 새로운 정보가 유입될 때마다 전체 모델을 재학습하거나, 기존 파라미터를 완전히 대체하는 방식을 취하고 있다.이러한 접근은 실시간 대응과 비용 효율성 측면에서 근본적인 한계를 지니며, 이는 본 연구에서 제안하는 Relation-aware fine-tuning 전략이 출발하게 된 핵심 문제의식이다.
 %제안하는 Relation-aware fine-tuning은 기존 접근 방식과 비교하여 다음과 같은 강점을 제공한다:
 To date, most prior studies have assumed a static learning-inference paradigm, in which models are either fully retrained whenever new information arises or their parameters are entirely replaced. Such strategies face inherent constraints in terms of real-time responsiveness and cost-efficiency, which form the central motivation for the RAFT strategy proposed in this work. Compared with conventional methods, /gls{raft} offers the following advantages:
-\begin{itemize}
-	\item{\textbf{1}:
+\begin{enumerate}
+	\item{
 	%전체 데이터를 재학습하지 않고도, 새로운 정보와 기존 지식 간의 논리적 관계에 기반한 최소한의 업데이트만으로 최신성을 유지할 수 있다.}
     Maintaining model recency through minimal updates guided by logical relationships between newly acquired information and existing knowledge, without retraining on the entire dataset.}
-	\item{\textbf{2}:
+	\item{
 	%기존 지식을 보존하면서도 새로운 지식을 효과적으로 반영함으로써, 지식 유지와 갱신 간의 균형을 달성한다.}
     Balancing knowledge retention and update by preserving prior representations while effectively integrating new evidence.}
-	\item{\textbf{3}:
+	\item{
 	%연산 자원과 학습 시간을 크게 절감할 수 있으며, 특히 대규모 언어모델에서 효율적인 유지 관리가 가능하다.}
     Enhancing efficiency in large-scale language models by substantially reducing computational resources and training time required for maintenance.}
-	\item{\textbf{4}:
+	\item{
 	%검색 기반이나 프롬프트 기반 방식에서 흔히 발생하는 논리적 비일관성을 최소화하여 데이터 정합성을 확보한다.}
     Ensuring data consistency by minimizing the logical inconsistencies that are commonly observed in retrieval-based and prompt-based approaches.}
-\end{itemize}
+\end{enumerate}
 
 
 % 논문의 구성
-This dissertation is structured into five main chapters, each designed to progressively build the theoretical foundation, methodological development, experimental validation, and implications of the proposed fake news detection framework. The overall structure is as follows:
-Chapter 1: Introduction outlines the motivation and background for this research, emphasizing the challenges posed by the rapid spread of fake news on social media and the limitations of existing detection approaches. It articulates the need for adaptable, knowledge-editable models in dynamic information environments such as COVID-19. The chapter concludes by detailing the core contributions of the dissertation and providing an overview of its structure.
-Chapter 2: Theoretical Background and Related Works reviews foundational studies relevant to fake news detection. It examines the evolution of detection techniques from traditional machine learning to pretrained transformer-based models and identifies gaps in adapting to rapidly changing information. This chapter also introduces key methodologies such as Pretrained Knowledge Transfer, Retrieval-Augmented Generation (RAG), and Knowledge Editing, which form the basis of the proposed model.
-Chapter 3: Method presents the technical architecture of the proposed fake sentence detection system. The chapter begins with the construction and preprocessing of a COVID-19 specific Korean dataset. It then introduces two detection models: a baseline model based on transfer learning (3.2) and an advanced model based on Relation-aware Fine-Tuning (3.3). Each model’s structure is detailed across embedding, contextual, and classification layers, including how external knowledge is retrieved and logically integrated using NLI.
-Chapter 4: Experiment and Result provides empirical validation of the proposed methods. Section 4.1 focuses on the baseline model and evaluates its performance through various metrics and ablation studies. Section 4.2 validates the Relation-aware Fine-Tuning model by comparing its accuracy, Locality, Generality, and efficiency against standard fine-tuning. Detailed ablation experiments examine the effects of model structure (encoder-only vs. decoder-included), relationship types, Cross-Encoder usage, and loss function design. Section 4.3 offers an in-depth discussion of the results, including both strengths and limitations of the proposed approach.
-Chapter 5: Conclusion and Future Work summarizes the research findings and reiterates the practical and theoretical contributions of the dissertation. It also outlines several avenues for future research, including expansion to other domains, integration with large-scale language models, and development of fully automated knowledge editing pipelines.
+%This paper is structured into five main chapters, each designed to progressively build the theoretical foundation, methodological development, experimental validation, and implications of the proposed fake news detection framework. The overall structure is as follows:
+%Chapter 1: Introduction outlines the motivation and background for this research, emphasizing the challenges posed by the rapid spread of fake news on social media and the limitations of existing detection approaches. It articulates the need for adaptable, knowledge-editable models in dynamic information environments such as COVID-19. The chapter concludes by detailing the core contributions of the dissertation and providing an overview of its structure.
+%Chapter 2: Theoretical Background and Related Works reviews foundational studies relevant to fake news detection. It examines the evolution of detection techniques from traditional machine learning to pretrained transformer-based models and identifies gaps in adapting to rapidly changing information. This chapter also introduces key methodologies such as Pretrained Knowledge Transfer, Retrieval-Augmented Generation (RAG), and Knowledge Editing, which form the basis of the proposed model.
+%Chapter 3: Method presents the technical architecture of the proposed fake sentence detection system. The chapter begins with the construction and preprocessing of a COVID-19 specific Korean dataset. It then introduces two detection models: a baseline model based on transfer learning (3.2) and an advanced model based on Relation-aware Fine-Tuning (3.3). Each model’s structure is detailed across embedding, contextual, and classification layers, including how external knowledge is retrieved and logically integrated using NLI.
+%Chapter 4: Experiment and Result provides empirical validation of the proposed methods. Section 4.1 focuses on the baseline model and evaluates its performance through various metrics and ablation studies. Section 4.2 validates the Relation-aware Fine-Tuning model by comparing its accuracy, Locality, Generality, and efficiency against standard fine-tuning. Detailed ablation experiments examine the effects of model structure (encoder-only vs. decoder-included), relationship types, Cross-Encoder usage, and loss function design. Section 4.3 offers an in-depth discussion of the results, including both strengths and limitations of the proposed approach.
+%Chapter 5: Conclusion and Future Work summarizes the research findings and reiterates the practical and theoretical contributions of the dissertation. It also outlines several avenues for future research, including expansion to other domains, integration with large-scale language models, and development of fully automated knowledge editing pipelines.
 
 
 %============================================================%
@@ -298,83 +301,113 @@ Chapter 5: Conclusion and Future Work summarizes the research findings and reite
 \section{Related works}
 
 
-\subsection{Retrieval-Augmented Generation (RAG) and Prompting}
+\subsection{\Glsentryfull{rag} and Prompting}
 %RAG의 등장
-최근 대규모 언어 모델(Large Language Model, LLM)의 성능이 향상되면서, 사전 학습된 모델의 내부 지식을 활용한 다양한 자연어 생성 및 이해 과제가 가능해졌다. 하지만 LLM은 고정된 파라미터 내에 지식을 암묵적으로 저장하기 때문에, 최신 정보 반영이 어렵고 근거 없는 출력을 생성할 가능성도 존재한다. 이러한 한계를 보완하기 위해 제안된 방법이 Retrieval-Augmented Generation (RAG)이다.
+%최근 대규모 언어 모델(Large Language Model, LLM)의 성능이 향상되면서, 사전 학습된 모델의 내부 지식을 활용한 다양한 자연어 생성 및 이해 과제가 가능해졌다. 하지만 LLM은 고정된 파라미터 내에 지식을 암묵적으로 저장하기 때문에, 최신 정보 반영이 어렵고 근거 없는 출력을 생성할 가능성도 존재한다. 이러한 한계를 보완하기 위해 제안된 방법이 Retrieval-Augmented Generation (RAG)이다.
+With the recent advances in \gls{llm}, a wide range of natural language understanding and generation tasks can now be accomplished by leveraging the internal knowledge encoded within pretrained models. However, since \gls{llm} implicitly store knowledge within fixed parameters, they face inherent limitations in incorporating up-to-date information and may generate unsupported or hallucinated outputs. To address these challenges, \gls{rag} has been proposed as a complementary approach.
 
-RAG는 질문 응답이나 문서 요약, 텍스트 생성과 같은 작업에서 사전 학습된 생성 모델에 외부 지식 검색 모듈을 결합한 아키텍처이다(Lewis et al., 2020). 입력 쿼리가 주어지면, 먼저 질문과 유사한 문서나 문장을 벡터 DB로부터 검색하고, 이 검색 결과를 생성 모델의 입력에 포함시켜 응답을 생성한다. 생성 모델은 이 검색된 외부 문서를 conditioning하여 보다 정보에 기반한 응답을 생성할 수 있다.
+%RAG는 질문 응답이나 문서 요약, 텍스트 생성과 같은 작업에서 사전 학습된 생성 모델에 외부 지식 검색 모듈을 결합한 아키텍처이다(Lewis et al., 2020). 입력 쿼리가 주어지면, 먼저 질문과 유사한 문서나 문장을 벡터 DB로부터 검색하고, 이 검색 결과를 생성 모델의 입력에 포함시켜 응답을 생성한다. 생성 모델은 이 검색된 외부 문서를 conditioning하여 보다 정보에 기반한 응답을 생성할 수 있다.
+\gls{rag} is an architecture that integrates an external knowledge retrieval module into a pretrained generative model to enhance tasks such as question answering, document summarization, and text generation (Lewis et al., 2020). Given an input query, the system first retrieves semantically relevant documents or sentences from a vector database, and the retrieved results are subsequently incorporated into the input of the generative model. By conditioning on this external evidence, the model produces responses that are more informative and grounded.
 
-RAG는 일반적으로 다음과 같은 두 단계로 구성된다.
+%RAG는 일반적으로 다음과 같은 두 단계로 구성된다.
+\gls{rag} is generally composed of the following two stages.
 \begin{itemize}
-    \item{\textbf{Retrieval phase}:
-    입력 쿼리와 유사한 텍스트를 FAISS 등의 벡터 기반 검색기를 활용하여 외부 지식소(예: 위키피디아, 뉴스 DB 등)에서 탐색한다.}
-    \item{\textbf{Generation phase}:
-    검색된 문서들과 함께 입력 쿼리를 조건으로 하여, BART나 T5와 같은 생성 모델이 답변 또는 예측 결과를 생성한다.}
+    \item{\textbf{Retrieval stage}:
+    Retrieving semantically relevant texts from external knowledge sources (e.g., Wikipedia, news databases) using vector-based retrievers such as \gls{faiss}.}
+    \item{\textbf{Generation stage}:
+    Generating answers or predictions by conditioning the input query together with the retrieved documents on a generative model such as BART or T5.}
 \end{itemize}
-이러한 구조를 통해 RAG는 정적 파라미터 기반의 LLM과 달리, 동적으로 최신 정보에 접근할 수 있으며, 그 출처를 명시하거나 근거 기반의 설명이 가능하다는 장점이 있다.
-대규모 사전학습 언어 모델은 실제로 상당량의 사실 지식을 내재화하고 있으나, 이러한 지식에 직접적으로 접근하거나 정밀하게 조작하는 능력은 여전히 제한적이다(Barnett et al., 2024). 따라서 지식 기반 작업(knowledge-intensive task)에서는 여전히 LLM이 해당 도메인에 특화된 구조나 아키텍처보다 성능이 떨어지는 경우가 많다. 또한, LLM이 생성한 응답의 근거(provenance)를 제공하거나, 세상에 대한 지식을 최신 상태로 유지하는 문제는 여전히 열린 연구 과제(open research problems)로 남아 있다(Gao et al., 2023; Gupta et al., 2024).
+%이러한 구조를 통해 RAG는 정적 파라미터 기반의 LLM과 달리, 동적으로 최신 정보에 접근할 수 있으며, 그 출처를 명시하거나 근거 기반의 설명이 가능하다는 장점이 있다.
+Through this structure, \gls{rag} provides the advantage of dynamically accessing up-to-date information, in contrast to \gls{llm} that rely solely on static parameters, and it further enables explicit citation of sources and evidence-based explanations.
 
-가짜 뉴스 탐지 분야에서도 RAG는 최근 효과적인 접근 방식으로 주목 받고 있다(Malladi et al., 2024; Niu et al., 2024; Li et al., 2024). 가짜 뉴스는 시의성과 도메인 특이성이 매우 강한 문제로, 새로운 사건이 발생할 때마다 정보가 빠르게 변화하며, 기존 모델만으로는 정확한 탐지가 어려울 수 있다. 이때, RAG는 최신 기사, 정부 발표, 팩트 체크 데이터 등 외부 신뢰 자원에서 관련 정보를 실시간 검색하여 모델에 입력함으로써, 보다 사실에 기반한 판별이 가능하게 한다.
+%대규모 사전학습 언어 모델은 실제로 상당량의 사실 지식을 내재화하고 있으나, 이러한 지식에 직접적으로 접근하거나 정밀하게 조작하는 능력은 여전히 제한적이다(Barnett et al., 2024). 따라서 지식 기반 작업(knowledge-intensive task)에서는 여전히 LLM이 해당 도메인에 특화된 구조나 아키텍처보다 성능이 떨어지는 경우가 많다. 또한, LLM이 생성한 응답의 근거(provenance)를 제공하거나, 세상에 대한 지식을 최신 상태로 유지하는 문제는 여전히 열린 연구 과제(open research problems)로 남아 있다(Gao et al., 2023; Gupta et al., 2024).
+While large-scale pretrained language models have internalized a substantial amount of factual knowledge, their ability to directly access or precisely manipulate such knowledge remains limited (Barnett et al., 2024). Consequently, in knowledge-intensive tasks, \gls{llm} often underperform compared with architectures specifically tailored to the target domain. Moreover, the ability to provide provenance for generated outputs and to keep the model's knowledge aligned with real-world updates remains an open research problem (Gao et al., 2023; Gupta et al., 2024).
 
-실제로 RAG 기반 가짜 뉴스 탐지 연구에서는, 생성된 응답뿐 아니라 근거가 되는 문장을 함께 제공함으로써 설명 가능성을 확보하고, 기존의 분류 기반 모델보다 사용자 신뢰를 더 높일 수 있다는 결과도 보고되고 있다(Chen et al., 2024; Nezafat et al., 2024).
 %Prompting 기법
+%RAG와 함께, 최근 정보 기반 추론을 강화하는 데에 효과적인 또 다른 전략으로 Prompting 기법이 활용되고 있다(Rahman et al., 2018; Mishra et al., 2018; Wei et al., 2022). Prompting 기법은 모델이 정답을 유추하는 과정에서 직접적으로 외부 지시를 입력(Instruction) 받아 이를 기반으로 응답을 생성하거나 판단을 내리는 방식이다. 이 방식은 모델 파라미터를 변경하지 않고도 최신 정보 반영이 가능하다는 점에서, 전통적인 fine-tuning보다 훨씬 유연하고 실용적인 방법으로 간주된다.
+Alongside \gls{rag}, prompting has emerged as another effective strategy for enhancing information-based reasoning (Rahman et al., 2018; Mishra et al., 2018; Wei et al., 2022). Prompting guides the model by providing explicit instructions during the inference process, enabling it to generate responses or make judgments conditioned on the given prompts. Since this approach incorporates new information without modifying model parameters, it is regarded as a more flexible and practical alternative compared with conventional fine-tuning.
 
-RAG와 함께, 최근 정보 기반 추론을 강화하는 데에 효과적인 또 다른 전략으로 Prompting 기법이 활용되고 있다(Rahman et al., 2018; Mishra et al., 2018; Wei et al., 2022). Prompting 기법은 모델이 정답을 유추하는 과정에서 직접적으로 외부 지시를 입력(Instruction) 받아 이를 기반으로 응답을 생성하거나 판단을 내리는 방식이다. 이 방식은 모델 파라미터를 변경하지 않고도 최신 정보 반영이 가능하다는 점에서, 전통적인 fine-tuning보다 훨씬 유연하고 실용적인 방법으로 간주된다.
-
-Prompting 기법은 크게 다음 세 가지 방식으로 분류된다:
+Prompting techniques are generally categorized into the following three approaches.
 \begin{itemize}
     \item{\textbf{Zero-shot Learning}:
-    사전 학습된 언어 모델에 대해 추가적인 fine-tuning 없이, 질문과 최소한의 맥락 정보만을 입력하여 곧바로 결과를 생성하게 하는 학습 방식이다(Kojima et al., 2022). 이 방식은 모델이 기존에 내재화한 일반화 능력과 배경 지식을 활용하여 새로운 문제에 즉각적으로 대응하도록 한다는 점에서, 별도의 학습 없이도 다양한 태스크에 적용 가능하다는 장점을 가진다.}
+    %사전 학습된 언어 모델에 대해 추가적인 fine-tuning 없이, 질문과 최소한의 맥락 정보만을 입력하여 곧바로 결과를 생성하게 하는 학습 방식이다(Kojima et al., 2022). 이 방식은 모델이 기존에 내재화한 일반화 능력과 배경 지식을 활용하여 새로운 문제에 즉각적으로 대응하도록 한다는 점에서, 별도의 학습 없이도 다양한 태스크에 적용 가능하다는 장점을 가진다.
+    A paradigm in which a \gls{plm} generates outputs directly from a query and minimal contextual information without additional fine-tuning (Kojima et al., 2022). This approach exploits the model's inherent generalization ability and background knowledge to respond immediately to new problems, offering the advantage of applicability to diverse tasks without further training.}
     \item{\textbf{Few-shot Learning}:
-    사전 학습된 언어 모델이 문제를 해결할 수 있도록, 입력에 소수의 예시(few examples)를 함께 제공하는 학습 방식이다. 이러한 접근은 모델에게 명시적인 규칙 학습 없이도 정답 판단을 위한 기준을 암묵적으로 제시함으로써, 분류 성능과 일반화 능력을 향상시키는 데 기여한다.}
+    %사전 학습된 언어 모델이 문제를 해결할 수 있도록, 입력에 소수의 예시(few examples)를 함께 제공하는 학습 방식이다. 이러한 접근은 모델에게 명시적인 규칙 학습 없이도 정답 판단을 위한 기준을 암묵적으로 제시함으로써, 분류 성능과 일반화 능력을 향상시키는 데 기여한다.
+    A paradigm in which a \gls{plm} is provided with a small set of examples within the input to facilitate problem solving. By implicitly presenting decision criteria without explicit rule learning, this approach contributes to improving classification performance and enhancing generalization capability.}
     \item{\textbf{In-context Learning}:
-    Zero-shot 및 Few-shot Learning을 포함하는 보다 일반적인 프롬프트 기반 학습 방식으로, 모델 입력 내에 다양한 문맥(Context) 정보를 함께 제공함으로써 정답을 유도하는 접근이다(Dong et al., 2022). 이 방식에서는 모델 파라미터를 업데이트하지 않고도, 입력 시점에 주어진 정보만으로 문제 해결을 수행하게 된다. In-context Learning은 사전학습된 모델이 입력 내에서 논리적 패턴, 분류 기준, 추론 과정 등을 파악하여 이를 기반으로 응답을 생성하도록 유도하며, 별도의 fine-tuning 없이도 높은 수준의 적응력을 보인다는 점에서 실용적 장점이 크다(Min et al., 2022; Luo et al., 2024). 특히 GPT 시리즈, LLaMA 등과 같은 최신 대규모 언어 모델에서는 In-context Learning이 기존 task-specific 학습 방식에 버금가는 성능을 발휘하는 것으로 보고되고 있으며, 다양한 태스크에 대한 범용성과 전이 가능성을 갖춘 접근으로 평가받고 있다.}
+    %Zero-shot 및 Few-shot Learning을 포함하는 보다 일반적인 프롬프트 기반 학습 방식으로, 모델 입력 내에 다양한 문맥(Context) 정보를 함께 제공함으로써 정답을 유도하는 접근이다(Dong et al., 2022). 이 방식에서는 모델 파라미터를 업데이트하지 않고도, 입력 시점에 주어진 정보만으로 문제 해결을 수행하게 된다. In-context Learning은 사전학습된 모델이 입력 내에서 논리적 패턴, 분류 기준, 추론 과정 등을 파악하여 이를 기반으로 응답을 생성하도록 유도하며, 별도의 fine-tuning 없이도 높은 수준의 적응력을 보인다는 점에서 실용적 장점이 크다(Min et al., 2022; Luo et al., 2024). 특히 GPT 시리즈, LLaMA 등과 같은 최신 대규모 언어 모델에서는 In-context Learning이 기존 task-specific 학습 방식에 버금가는 성능을 발휘하는 것으로 보고되고 있으며, 다양한 태스크에 대한 범용성과 전이 가능성을 갖춘 접근으로 평가받고 있다.
+    A more general prompting paradigm that encompasses both zero-shot and few-shot learning, in which diverse contextual information is incorporated into the model input to guide prediction (Dong et al., 2022). Without updating model parameters, the model performs problem solving solely based on the information available at inference time. In-context learning enables pretrained models to identify logical patterns, classification criteria, and reasoning processes within the input, thereby generating responses without additional fine-tuning. It has been reported to exhibit high adaptability (Min et al., 2022; Luo et al., 2024), achieving task performance comparable to task-specific training in recent large-scale language models such as the GPT series and LLaMA. Owing to its versatility and transferability, in-context learning is increasingly regarded as a practical and generalizable approach across diverse tasks.}
 \end{itemize}
 
-이러한 Prompting 기법은 모델의 파라미터를 전혀 변경하지 않고도 최신 정보를 반영할 수 있다는 점에서, 지속적으로 변화하는 정보 환경에 대응해야 하는 가짜 뉴스 탐지 문제에 매우 적합하다. 예를 들어 새로운 허위 의학 정보가 유포될 경우, 해당 문장과 함께 정부 공식 발표나 신뢰도 높은 출처의 사실을 예시로 제시하는 것만으로도, 모델이 높은 정확도로 판단을 내릴 수 있다.
+%이러한 Prompting 기법은 모델의 파라미터를 전혀 변경하지 않고도 최신 정보를 반영할 수 있다는 점에서, 지속적으로 변화하는 정보 환경에 대응해야 하는 가짜 뉴스 탐지 문제에 매우 적합하다. 예를 들어 새로운 허위 의학 정보가 유포될 경우, 해당 문장과 함께 정부 공식 발표나 신뢰도 높은 출처의 사실을 예시로 제시하는 것만으로도, 모델이 높은 정확도로 판단을 내릴 수 있다.
+Such prompting techniques are highly suitable for fake news detection, where models must respond to continuously evolving information environments, as they enable the integration of up-to-date knowledge without altering model parameters. For example, when new medical misinformation is disseminated, the model can achieve high accuracy simply by presenting the disputed statement together with official government announcements or factual evidence from reliable sources.
 
-또한, In-context Learning 방식은 단순한 진위 분류를 넘어, 모델의 응답에 설명력(explainability)을 부여할 수 있는 강력한 장점을 지닌다. 사용자는 모델이 해당 문장을 사실로 판단한 이유 또는 거짓으로 간주한 근거를 명확히 이해할 수 있으며, 이는 모델 응답의 신뢰성과 활용 가능성을 높이는 데 중요한 역할을 한다.
+%또한, In-context Learning 방식은 단순한 진위 분류를 넘어, 모델의 응답에 설명력(explainability)을 부여할 수 있는 강력한 장점을 지닌다. 사용자는 모델이 해당 문장을 사실로 판단한 이유 또는 거짓으로 간주한 근거를 명확히 이해할 수 있으며, 이는 모델 응답의 신뢰성과 활용 가능성을 높이는 데 중요한 역할을 한다.
+In addition, in-context learning offers a significant advantage by providing explainability beyond simple veracity classification. Users can clearly understand the rationale for which the model judges a statement as true or the evidence for which it is considered false, thereby enhancing both the reliability and practical utility of the model's responses.
 
-\subsection{Knowledge-based Model Editing}
+%Retrieval-Augmented Generation (RAG)과 In-context Learning을 포함한 Prompting 기법은, 고정된 파라미터를 갖는 사전학습 모델의 한계를 보완하는 유연한 접근법으로 주목받아왔다. 이러한 방식은 모델의 내부 파라미터를 변경하지 않고도 외부 지식을 조건부 입력으로 주입하여, 최신 정보에 대한 반응성과 설명 가능성을 일정 부분 확보할 수 있다는 장점이 있다.
+\gls{rag} and prompting techniques, including in-context learning, have gained attention as flexible approaches to complement the limitations of pretrained models with fixed parameters. These methods enable the injection of external knowledge as conditional input without modifying internal parameters, thereby offering certain advantages in terms of responsiveness to up-to-date information and explainability.
+
+%그러나 이러한 방법론 역시 근본적인 한계점을 갖고 있다. 우선, RAG와 Prompting 기반의 접근법은 입력 문장마다 새로운 문서 검색 또는 프롬프트 구성이 필요하기 때문에, 일관된 시스템 출력을 유지하는 데 제약이 있다(Xue et al., 2024). 또한 지식이 파라미터에 반영되지 않기 때문에, 동일한 정보가 반복적으로 입력되지 않으면 모델은 이를 기억하거나 일반화할 수 없다(Hu et al., 2024). 결과적으로, 일관된 지식 기반의 추론이나 다단계 응답 생성을 요구하는 응용에서는 불안정한 출력을 초래할 수 있다(Cao et al., 2025).
+However, these methodologies also present fundamental limitations. First, \gls{rag} and prompting-based approaches require either document retrieval or prompt construction for each input, which constrains the ability to maintain consistent system outputs (Xue et al., 2024). Furthermore, because knowledge is not embedded within the parameters, the model cannot retain or generalize such information unless it is repeatedly provided as input (Hu et al., 2024). As a result, applications demanding consistent knowledge-based reasoning or multi-step response generation are prone to unstable outputs (Cao et al., 2025).
+
+\subsection{\Glsentryfull{kme}}
 %KME 등장 이유
-Retrieval-Augmented Generation (RAG)과 In-context Learning을 포함한 Prompting 기법은, 고정된 파라미터를 갖는 사전학습 모델의 한계를 보완하는 유연한 접근법으로 주목받아왔다. 이러한 방식은 모델의 내부 파라미터를 변경하지 않고도 외부 지식을 조건부 입력으로 주입하여, 최신 정보에 대한 반응성과 설명 가능성을 일정 부분 확보할 수 있다는 장점이 있다.
-그러나 이러한 방법론 역시 근본적인 한계점을 갖고 있다. 우선, RAG와 Prompting 기반의 접근법은 입력 문장마다 새로운 문서 검색 또는 프롬프트 구성이 필요하기 때문에, 일관된 시스템 출력을 유지하는 데 제약이 있다(Xue et al., 2024). 또한 지식이 파라미터에 반영되지 않기 때문에, 동일한 정보가 반복적으로 입력되지 않으면 모델은 이를 기억하거나 일반화할 수 없다(Hu et al., 2024). 결과적으로, 일관된 지식 기반의 추론이나 다단계 응답 생성을 요구하는 응용에서는 불안정한 출력을 초래할 수 있다(Cao et al., 2025).
+%RAG와 Prompting 기반 접근이 파라미터 갱신 없이도 일정 수준의 유연성을 제공하는 반면, 기존의 대표적 방법으로는 Fine-tuning이 있다. Fine-tuning은 새로운 지식을 사전학습 모델에 직접 반영하기 위한 가장 전통적이고 직관적인 방식으로, 모델 파라미터를 업데이트하여 최신 정보를 내재화할 수 있다는 장점을 지닌다. 그러나 이러한 방식은 전체 모델을 다시 학습해야 하기 때문에 시간과 연산 자원이 과도하게 소모되는 구조적 비효율성을 피하기 어렵다(Han et al., 2024). 더불어 일부 지식을 추가하거나 수정하는 과정에서 기존의 핵심 지식이 훼손되는 Catastrophic Forgetting 문제가 발생할 수 있으며, Fine-tuning의 범위가 넓어질수록 이러한 위험은 더욱 커진다(Kalajdzievski, 2024; Xia et al., 2024). 특히 단일 사실 단위의 지식 수정과 같이 정밀한 개입이 요구되는 상황에서는 과도한 수정이 발생할 가능성이 높아, 지식 편집이라는 목적에는 적합하지 않다.
+While \gls{rag} and prompting-based approaches provide a certain degree of flexibility without parameter updates, the most conventional method has been fine-tuning. Fine-tuning is regarded as the most traditional and straightforward approach for directly incorporating new knowledge into pretrained models, as it updates model parameters to internalize up-to-date information. However, this method inevitably incurs substantial inefficiency, since the entire model must be retrained, consuming significant time and computational resources (Han et al., 2024). Moreover, the process of adding or modifying specific knowledge may lead to catastrophic forgetting, in which previously acquired and essential knowledge is compromised. This risk becomes more pronounced as the scope of fine-tuning expands (Kalajdzievski, 2024; Xia et al., 2024). In particular, when precise intervention is required, for example in editing knowledge at the level of individual factual units, fine-tuning often results in over-modification, rendering it ill-suited for the purpose of knowledge editing.
 
-한편, 이를 보완하고자 하는 시도로 Fine-tuning 기반의 접근이 존재하지만, 이 역시 또 다른 제약을 수반한다. Fine-tuning은 새로운 지식을 모델에 반영하는 가장 직접적인 방식이긴 하나, 전체 모델을 재학습해야 하며, 시간과 연산 자원이 매우 많이 소요되는 구조적인 비효율성을 동반한다(Han et al., 2024). 더불어 일부 지식을 추가 또는 수정하는 과정에서 기존의 중요 지식이 훼손되는 Catastrophic Forgetting 문제가 발생할 수 있으며, fine-tuning의 범위가 넓을수록 이러한 리스크는 커진다(Kalajdzievski, 2024; Xia et al., 2024) . 특히 단일 사실 단위의 지식 변경과 같이 정밀한 개입이 필요한 상황에서는 과잉 수정이 발생할 가능성이 높아, 지식 편집이라는 목적에 적합하지 않다.
+%이처럼 기존 방법론들이 가지고 있는 공통적인 한계 즉, 비효율적 자원 사용, 장기적 기억 부족, 정합성 유지의 어려움은 궁극적으로 지식 수준의 수정 및 삽입을 위한 더 정밀하고 제어 가능한 기술의 필요성을 부각시킨다. 이러한 문제를 해결하기 위한 대표적 대안으로 최근 주목받고 있는 접근이 바로 Knowledge-based Model Editing (KME)이다.
+These common limitations of existing approaches, namely inefficient use of computational resources, insufficient long-term memory, and difficulties in maintaining consistency, ultimately highlight the need for more precise and controllable techniques for knowledge-level modification and insertion. A representative alternative that has recently gained considerable attention to address these challenges is \gls{kme}.
 
-이처럼 기존 방법론들이 가지고 있는 공통적인 한계 즉, 비효율적 자원 사용, 장기적 기억 부족, 정합성 유지의 어려움은 궁극적으로 지식 수준의 수정 및 삽입을 위한 더 정밀하고 제어 가능한 기술의 필요성을 부각시킨다. 이러한 문제를 해결하기 위한 대표적 대안으로 최근 주목받고 있는 접근이 바로 Knowledge-based Model Editing (KME)이다.
+%KME는 기존 모델 전체를 재학습하지 않고도, 특정 지식 항목만을 선택적으로 수정하거나 삽입함으로써 모델의 출력을 국소적으로 조정할 수 있는 기법이다(Wang et al., 2024; Yao et al., 2023; Li et al., 2024) . 이 방식은 fine-tuning보다 훨씬 적은 연산 자원과 시간으로 지식 갱신을 가능하게 하며, 특히 실시간성, 지식 정합성, 편집 이력의 추적 가능성이 요구되는 응용 환경에서 매우 유용하다. KME는 단일 문장 또는 특정 사실 수준에서의 수정뿐 아니라, 그 편집이 모델 전체 동작에 미치는 영향 범위를 최소화하며 다양한 질의에 일관되게 반응하도록 유도해야 한다는 점에서, 단순한 파라미터 조정 이상의 구조적 통찰을 요구한다. KME가 충족해야 할 핵심적인 요구는 크게 두 가지로 요약된다:
+\gls{kme} is a technique that enables localized adjustment of model outputs by selectively modifying or inserting specific knowledge items without retraining the entire model (Wang et al., 2024; Yao et al., 2023; Li et al., 2024). This approach allows knowledge updates with substantially lower computational cost and time compared with fine-tuning, making it particularly valuable in application scenarios that demand real-time responsiveness, knowledge consistency, and traceability of editing history. Beyond modifying individual sentences or factual units, \gls{kme} requires structural insights that ensure the scope of edits remains minimally disruptive to the overall model behavior while guiding the model to respond consistently across diverse queries. The fundamental requirements that \gls{kme} must fulfill can be summarized into two main criteria.
 
- KME는 기존 모델 전체를 재학습하지 않고도, 특정 지식 항목만을 선택적으로 수정하거나 삽입함으로써 모델의 출력을 국소적으로 조정할 수 있는 기법이다(Wang et al., 2024; Yao et al., 2023; Li et al., 2024) . 이 방식은 fine-tuning보다 훨씬 적은 연산 자원과 시간으로 지식 갱신을 가능하게 하며, 특히 실시간성, 지식 정합성, 편집 이력의 추적 가능성이 요구되는 응용 환경에서 매우 유용하다. KME는 단일 문장 또는 특정 사실 수준에서의 수정뿐 아니라, 그 편집이 모델 전체 동작에 미치는 영향 범위를 최소화하며 다양한 질의에 일관되게 반응하도록 유도해야 한다는 점에서, 단순한 파라미터 조정 이상의 구조적 통찰을 요구한다. KME가 충족해야 할 핵심적인 요구는 크게 두 가지로 요약된다:
-
- \begin{itemize}
+\begin{itemize}
     \item{\textbf{Locality}:
-    편집이 목표로 하는 지식 항목에만 영향을 미치고, 그 외의 논리적으로 무관한 기존 지식은 가능한 한 보존되어야 함을 의미한다. 예를 들어, 하나의 특정 사실을 수정한 이후에도 그와 무관한 문장이나 응답이 변형되지 않고 일관성을 유지하는 것이 이상적인 편집이다.}
+    %편집이 목표로 하는 지식 항목에만 영향을 미치고, 그 외의 논리적으로 무관한 기존 지식은 가능한 한 보존되어야 함을 의미한다. 예를 들어, 하나의 특정 사실을 수정한 이후에도 그와 무관한 문장이나 응답이 변형되지 않고 일관성을 유지하는 것이 이상적인 편집이다.
+    The edit should influence only the targeted knowledge item, while preserving as much as possible the logically unrelated pre-existing knowledge. For example, after modifying a specific fact, sentences or responses unrelated to that fact should remain unchanged, thereby maintaining overall consistency.}
 
     \item{\textbf{Generality}:
-    편집된 지식이 특정 문장 표현에만 반응하는 것이 아니라, 의미적으로 동일하거나 유사한 다양한 질의에 대해서도 일관된 방식으로 적용될 수 있어야 한다는 요구이다. 즉, 단일 표현이 아닌 의미적 변형(semantic variation)에 대해서도 robust하게 대응할 수 있어야 한다.}
+    %편집된 지식이 특정 문장 표현에만 반응하는 것이 아니라, 의미적으로 동일하거나 유사한 다양한 질의에 대해서도 일관된 방식으로 적용될 수 있어야 한다는 요구이다. 즉, 단일 표현이 아닌 의미적 변형(semantic variation)에 대해서도 robust하게 대응할 수 있어야 한다.
+    The edited knowledge should not be restricted to a single sentence expression but should also apply consistently across semantically equivalent or similar queries. In other words, the model should demonstrate robustness to semantic variations rather than responding only to an exact phrasing.}
 
 \end{itemize}
 
-이러한 목표를 달성하기 위해 최근 연구들은 KME를 세 가지 위상(Recognition, Association, Mastery)으로 분해하여 설명한다(Zhang et al., 2024a).
+%이러한 목표를 달성하기 위해 최근 연구들은 KME를 세 가지 위상(Recognition, Association, Mastery)으로 분해하여 설명한다(Zhang et al., 2024a).
+To achieve these objectives, recent studies have decomposed \gls{kme} into three distinct phases: Recognition, Association, and Mastery (Zhang et al., 2024a).
 
 \begin{itemize}
     \item{\textbf{Recognition Phase}:
-    편집하고자 하는 지식을 인식하는 단계로, 외부의 데이터베이스 또는 문서 검색 시스템을 활용하여 모델에 결핍된 정보를 감지하고 수집하는 역할을 수행한다. 대표적인 예로는 RAG(Retrieval-Augmented Generation) 또는 In-context Learning 기반의 정보 주입 기법이 이에 해당된다.}
+    %편집하고자 하는 지식을 인식하는 단계로, 외부의 데이터베이스 또는 문서 검색 시스템을 활용하여 모델에 결핍된 정보를 감지하고 수집하는 역할을 수행한다. 대표적인 예로는 RAG(Retrieval-Augmented Generation) 또는 In-context Learning 기반의 정보 주입 기법이 이에 해당된다.
+    The phase in which the knowledge to be edited is identified, serving to detect and collect missing information through external databases or document retrieval systems. Representative examples include information injection techniques based on \gls{rag} or in-context learning.}
 
     \item{\textbf{Association Phase}:
-    인식된 새로운 정보를 모델의 기존 지식과 연결하고, 이를 내부 표현 공간에 정합성 있게 통합하는 단계이다. 이때 LoRA(Low-Rank Adaptation)나 Adapter Layer와 같은 경량 파라미터 삽입 기법이 자주 활용된다(Houlsby et al., 2019; Hu et al., 2022).}
+    %인식된 새로운 정보를 모델의 기존 지식과 연결하고, 이를 내부 표현 공간에 정합성 있게 통합하는 단계이다. 이때 LoRA(Low-Rank Adaptation)나 Adapter Layer와 같은 경량 파라미터 삽입 기법이 자주 활용된다(Houlsby et al., 2019; Hu et al., 2022).
+    The phase in which the newly recognized information is linked to the model's existing knowledge and coherently integrated into the internal representation space. Lightweight parameter insertion methods such as \gls{lora} or adapter layers are frequently employed for this purpose (Houlsby et al., 2019; Hu et al., 2022).}
     
     \item{\textbf{Mastery Phase}:
-    최종적으로 모델의 내부 파라미터를 직접 수정함으로써 새로운 지식을 완전히 내재화시키는 단계로, ROME, MEMIT, MEND와 같은 대표적 알고리즘이 해당된다(Meng et al., 2022a; Meng et al., 2022b; Mitchell et al., 2021)}
+    The phase in which the model's internal parameters are directly modified to fully internalize the new knowledge. Representative algorithms belonging to this category include ROME, MEMIT, and MEND (Meng et al., 2022a; Meng et al., 2022b; Mitchell et al., 2021).}
 \end{itemize}
 
-그러나 현재까지 제안된 대부분의 KME 기법들은 위에서 제시한 이상적 목표 중 일부만을 충족하거나, 상충하는 요구 조건들 간의 trade-off를 충분히 해소하지 못하는 한계를 보인다(Chen et al., 2024; Zhang et al., 2024b; Hsueh et al., 2024). 특히 많은 연구들은 새로운 사실 삽입(insert)에 집중하는 반면, 기존에 잘못 내재된 정보를 제거하거나 수정하는 문제(delete or repair)에는 비교적 소극적이며, 실질적인 기여가 제한적이다(Li et al., 2024., Fang et al., 2025). 더욱이, 대부분의 KME 기법은 단일 문장 또는 단일 삼중항(triple)에 기반한 좁은 범위의 사실 편집을 전제로 하며, 다중 문장 추론(multi-hop reasoning)이나 맥락 기반 일관성 유지와 같은 복잡한 응용에는 한계를 보이고 있다. 예를 들어, ROME은 Transformer의 Feed-Forward Network 내부에 존재하는 key-value 관계를 수정하여 특정 사실의 출력을 변경하는 방식이며, MEMIT은 이 과정을 다중 지식에 확장한 구조를 채택하고 있다. 그러나 이들 기법 모두 편집된 정보가 기존 지식과 논리적으로 충돌하는 경우, 그러한 충돌을 감지하거나 조정하는 구조를 갖추고 있지 않다. 결과적으로, 단순 삽입 방식은 오히려 모델의 지식 일관성을 저해하는 결과를 초래할 수 있다.
+%그러나 현재까지 제안된 대부분의 KME 기법들은 위에서 제시한 이상적 목표 중 일부만을 충족하거나, 상충하는 요구 조건들 간의 trade-off를 충분히 해소하지 못하는 한계를 보인다(Chen et al., 2024; Zhang et al., 2024b; Hsueh et al., 2024). 특히 많은 연구들은 새로운 사실 삽입(insert)에 집중하는 반면, 기존에 잘못 내재된 정보를 제거하거나 수정하는 문제(delete or repair)에는 비교적 소극적이며, 실질적인 기여가 제한적이다(Li et al., 2024., Fang et al., 2025). 
+However, most of the \gls{kme} methods proposed to date satisfy only a subset of the aforementioned ideal objectives, or they fail to adequately resolve the trade-offs among competing requirements (Chen et al., 2024; Zhang et al., 2024b; Hsueh et al., 2024). In particular, many studies have primarily focused on the insertion of new facts, while paying comparatively less attention to the deletion or repair of incorrectly internalized information, thereby limiting their practical contribution (Li et al., 2024; Fang et al., 2025).
 
-실제로 Locality와 Generality 중 하나의 요건만을 만족하는 기법은 존재하지만, 이 두 가지 요구 조건을 동시에 만족시키는 KME 기법은 아직까지 보고된 바 없다. 마찬가지로, Recognition-Association-Mastery의 세 위상을 모두 포괄하는 일관된 KME 프레임워크 또한 현재까지 존재하지 않는다.
+%더욱이, 대부분의 KME 기법은 단일 문장 또는 단일 삼중항(triple)에 기반한 좁은 범위의 사실 편집을 전제로 하며, 다중 문장 추론(multi-hop reasoning)이나 맥락 기반 일관성 유지와 같은 복잡한 응용에는 한계를 보이고 있다. 예를 들어, ROME은 Transformer의 Feed-Forward Network 내부에 존재하는 key-value 관계를 수정하여 특정 사실의 출력을 변경하는 방식이며, MEMIT은 이 과정을 다중 지식에 확장한 구조를 채택하고 있다. 
+Moreover, the majority of gls{kme} approaches assume a narrow scope of factual editing based on a single sentence or a single triple, and thus face limitations in handling more complex applications such as multi-hop reasoning or context-dependent consistency maintenance. For example, ROME modifies the key-value relations in the feed-forward networks of Transformers to alter the output of specific facts, whereas MEMIT extends this process to multiple knowledge items.
+
+%그러나 이들 기법 모두 편집된 정보가 기존 지식과 논리적으로 충돌하는 경우, 그러한 충돌을 감지하거나 조정하는 구조를 갖추고 있지 않다. 결과적으로, 단순 삽입 방식은 오히려 모델의 지식 일관성을 저해하는 결과를 초래할 수 있다. 
+Nevertheless, these methods lack mechanisms to detect or reconcile conflicts when the edited information logically contradicts existing knowledge.
+As a result, insertion-based methods may inadvertently undermine the overall consistency of the model's knowledge.
+
+%실제로 Locality와 Generality 중 하나의 요건만을 만족하는 기법은 존재하지만, 이 두 가지 요구 조건을 동시에 만족시키는 KME 기법은 아직까지 보고된 바 없다. 마찬가지로, Recognition-Association-Mastery의 세 위상을 모두 포괄하는 일관된 KME 프레임워크 또한 현재까지 존재하지 않는다. 이러한 격차는 실제 다운스트림 태스크에서 지식 편집 전략을 보다 실질적으로 검증할 필요성을 부각시킨다.
+In practice, while certain approaches satisfy either locality or generality, no \gls{kme} method has yet been reported that simultaneously fulfills both requirements. Likewise, a unified KME framework that encompasses the three phases of recognition, association, and mastery has not been proposed to date.
+This gap underscores the need for more practical validation of knowledge editing strategies in real-world downstream tasks.
 
 \subsection{fake news detection}
 
-가짜 뉴스 탐지는 주어진 뉴스 기사 에 대해 해당 기사가 사실인지 여부를 판별하는 이진 분류(binary classification) 문제로 정의된다. 기존 연구들에서는 이 문제를 다음과 같은 수학적 함수로 공식화하였다（Ahmed et al. 2018; Tanvir et al., 2019; Tiwari et al., 2023; Turica et al., 2023; Verma et al., 2021). 여기서 F(a)는 탐지함수이며，입력 a는 뉴스 콘텐츠(예: 제목, 본문, 출처 등)로 구성된다.
+%하나의 중요한 실제 응용 사례로 가짜 뉴스 탐지가 있으며, 이는 일반적으로 주어진 뉴스 기사가 사실인지 여부를 판별하는 이진 분류 문제로 정의된다. 기존 연구들에서는 이 문제를 다음과 같은 수학적 함수로 공식화하였다（Ahmed et al. 2018; Tanvir et al., 2019; Tiwari et al., 2023; Turica et al., 2023; Verma et al., 2021). 여기서 F(a)는 탐지함수이며，입력 a는 뉴스 콘텐츠(예: 제목, 본문, 출처 등)로 구성된다.
+One of the most important real-world applications is fake news detection, which is generally defined as a binary classification problem aimed at determining whether a given news article is factual or not. Prior studies have formally described this task as a mathematical function (Ahmed et al., 2018; Tanvir et al., 2019; Tiwari et al., 2023; Turica et al., 2023; Verma et al., 2021), where \( F(a)\) denotes the detection function and the input a consists of news content such as headlines, body text, or sources.
 \[
 F(a) =
 \begin{cases}
@@ -383,78 +416,111 @@ F(a) =
 \end{cases}
 \]
 
-이와 같은 정의는 대부분의 자동화된 가짜 뉴스 탐지 시스템에서 공통적으로 채택되며, 추후 딥러닝 기반 모델 혹은 대규모 언어 모델(LLM)을 활용한 접근 방식에서도 기본적인 분류 구조로 유지된다(Thota et al., 2018; Shu et al., 2019)
+%이와 같은 정의는 대부분의 자동화된 가짜 뉴스 탐지 시스템에서 공통적으로 채택되며, 추후 딥러닝 기반 모델 혹은 대규모 언어 모델(LLM)을 활용한 접근 방식에서도 기본적인 분류 구조로 유지된다(Thota et al., 2018; Shu et al., 2019)
+Such a definition is widely adopted in most automated fake news detection systems and remains the fundamental classification framework across diverse approaches, including those based on deep learning models and \gls{llm} (Thota et al., 2018; Shu et al., 2019).
 
-가짜 뉴스 탐지에 관한 연구는 초기에는 주로 뉴스 문서 자체의 표면적 특성을 분석하여 분류하는 전통적인 기계학습 기법을 중심으로 발전하였다.
-이러한 접근은 뉴스 콘텐츠로부터 텍스트 기반 특성(feature)을 추출하고, 이를 고정된 벡터 형태로 변환한 후, SVM(Support Vector Machine), 결정 트리(Classification Tree), 로지스틱 회귀(Logistic Regression) 등의 지도 학습 기반 분류기에 입력하여 진위 여부를 예측하는 방식이다(Conroy et al., 2015; Rubin et al., 2016; Krishna et al., 2022).
+%가짜 뉴스 탐지에 관한 연구는 초기에는 주로 뉴스 문서 자체의 표면적 특성을 분석하여 분류하는 전통적인 기계학습 기법을 중심으로 발전하였다. 이러한 접근은 뉴스 콘텐츠로부터 텍스트 기반 특성(feature)을 추출하고, 이를 고정된 벡터 형태로 변환한 후, SVM(Support Vector Machine), 결정 트리(Classification Tree), 로지스틱 회귀(Logistic Regression) 등의 지도 학습 기반 분류기에 입력하여 진위 여부를 예측하는 방식이다(Conroy et al., 2015; Rubin et al., 2016; Krishna et al., 2022).
+Research on fake news detection initially evolved around traditional machine learning techniques, which primarily focused on analyzing the surface-level characteristics of news documents. In this approach, textual features are extracted from the news content, transformed into fixed vector representations, and then fed into supervised classifiers such as Support Vector Machines (SVM), Classification Trees, or Logistic Regression to predict veracity (Conroy et al., 2015; Rubin et al., 2016; Krishna et al., 2022).
 
-Shu et al. (2017)은 이러한 콘텐츠 기반 특성을 크게 네 가지 범주로 구분하였다: 어휘적(lextical), 통사적(syntactic), 도메인 특화(domain-specific), 기만적 탐지(deception-related)이다.
+%Shu et al. (2017)은 이러한 콘텐츠 기반 특성을 크게 네 가지 범주로 구분하였다: 어휘적(lextical), 통사적(syntactic), 도메인 특화(domain-specific), 기만적 탐지(deception-related)이다.
+Shu et al. (2017) categorized such content-based features into four major groups: lexical, syntactic, domain-specific, and deception-oriented features.
 
 \begin{itemize}
-    \item{\textbf{어휘적 특성(Lexical feature)}:
-    단어 수, 고유 단어 비율, 평균 단어 길이, 고빈도 단어의 출현 빈도 등과 같이 문서의 어휘적 복잡성이나 단조로움 등을 정량화할 수 있는 지표로 구성된다. 이러한 특성은 주로 텍스트의 표면적 특징을 반영한다.}
+    \item{\textbf{%어휘적 특성
+    Lexical feature}:
+    %단어 수, 고유 단어 비율, 평균 단어 길이, 고빈도 단어의 출현 빈도 등과 같이 문서의 어휘적 복잡성이나 단조로움 등을 정량화할 수 있는 지표로 구성된다. 이러한 특성은 주로 텍스트의 표면적 특징을 반영한다.
+    Indicators that quantify lexical complexity or monotony of a document, such as word count, ratio of unique words, average word length, and frequency of high-frequency terms. These features primarily capture surface-level characteristics of the text.}
 
-    \item{\textbf{통사적 특성(Syntactic features)}:
-    기능어의 사용, 문장 구조, 구두점 사용, 품사 태깅(POS tagging)등 문법적 구성 요소에 기반하며, 특히 N-gram 기반 표현이나 구문 패턴을 통해 문체적 특징을 효과적으로 포착할 수 있다.}
+    \item{\textbf{%통사적 특성
+    Syntactic features}:
+    %기능어의 사용, 문장 구조, 구두점 사용, 품사 태깅(POS tagging)등 문법적 구성 요소에 기반하며, 특히 N-gram 기반 표현이나 구문 패턴을 통해 문체적 특징을 효과적으로 포착할 수 있다.
+    Features based on grammatical components such as the use of function words, sentence structures, punctuation, and part-of-speech (POS) tagging. In particular, N-gram representations and syntactic patterns effectively capture stylistic properties.}
     
-    \item{\textbf{도메인 특화 특성(Domain-specific feature)}:
-    뉴스 기사에서 자주 등장하는 표현, 인용문의 빈도, 외부 링크의 개수, 단락 수 및 평균 단락 길이 등 언론 보도의 전형적인 문체적 양상을 반영하는 지표로, 특정 도메인에 특화된 형식을 탐지하는 데 유리하다.}
-    \item{\textbf{기만성 탐지 특성(Deception-oriented features)}:
-    가짜 뉴스가 사실 전달보다는 독자의 주의를 끌거나 특정 목적을 달성하기 위해 작성된 경우가 많다는 점에 착안하여, 감정적으로 자극적인 표현이나 과장된 문장이 포함되는 경향성을 포착한다. 이에 따라 속이려는 의도가 드러나는 언어 패턴이나 문체적 특징을 기반으로 가짜 뉴스를 식별하려는 시도가 포함된다.}
+    \item{\textbf{%도메인 특화 특성
+    Domain-specific feature}:
+    %뉴스 기사에서 자주 등장하는 표현, 인용문의 빈도, 외부 링크의 개수, 단락 수 및 평균 단락 길이 등 언론 보도의 전형적인 문체적 양상을 반영하는 지표로, 특정 도메인에 특화된 형식을 탐지하는 데 유리하다.
+    Indicators reflecting typical stylistic traits of news reporting, including frequently used expressions, frequency of quotations, number of external links, number of paragraphs, and average paragraph length. These features are advantageous for detecting formats specific to certain domains.}
+    \item{\textbf{%기만성 탐지 특성
+    Deception-oriented features}:
+    %가짜 뉴스가 사실 전달보다는 독자의 주의를 끌거나 특정 목적을 달성하기 위해 작성된 경우가 많다는 점에 착안하여, 감정적으로 자극적인 표현이나 과장된 문장이 포함되는 경향성을 포착한다. 이에 따라 속이려는 의도가 드러나는 언어 패턴이나 문체적 특징을 기반으로 가짜 뉴스를 식별하려는 시도가 포함된다.
+    Features that capture tendencies of fake news to include emotionally provocative or exaggerated expressions, reflecting its purpose of drawing attention or achieving specific objectives rather than conveying factual information. These approaches identify deceptive intent through linguistic patterns and stylistic cues.}
 \end{itemize}
   
+%이러한 콘텐츠 기반 접근 방식은 구조가 단순하고 계산 비용이 낮다는 점에서 초기 가짜 뉴스 탐지 연구에서 널리 활용되었다. 그러나 텍스트의 심층적인 의미 구조나 맥락 정보를 충분히 반영하지 못한다는 한계가 지적되었다(Potthasst et al., 2017).
+Such content-based approaches were widely employed in early fake news detection research due to their simplicity in structure and low computational cost. However, they have been criticized for their inability to adequately capture the deeper semantic structures and contextual information of text (Potthast et al., 2017).
 
-이러한 콘텐츠 기반 접근 방식은 구조가 단순하고 계산 비용이 낮다는 점에서 초기 가짜 뉴스 탐지 연구에서 널리 활용되었다. 그러나 텍스트의 심층적인 의미 구조나 맥락 정보를 충분히 반영하지 못한다는 한계가 지적되었다(Potthasst et al., 2017).
+%이로 인해 이후의 연구는 콘텐츠 의미와 전파 구조, 사용자 정보를 통합하는 심층 학습 기반 탐지 기법으로 확장되었다. 
+As a result, subsequent studies expanded toward deep learning-based detection methods that integrate content semantics, propagation structures, and user information.
 
-이러한 한계를 보완하기 위해, 이후 연구에서는 단순한 텍스트 분석을 넘어 뉴스를 공유하는 사용자와 콘텐츠 간의 관계를 모델링하는 그래프 기반 탐지(graph-based detection) 접근법이 도입되었다. 이 방식은 소셜 미디어 플랫폼에서 뉴스가 어떻게 공유되고 확산되는지를 동적으로 모델링하고, 전파 양상에 따라 가짜 뉴스의 전형적 패턴을 식별하는 데 목적이 있다(Jin et al., 2013; Vosoughi et al., 2018). 
+%딥러닝 기반 접근은 전통적인 기계학습 방식이 가지는 수작업 특성 설계의 한계, 문맥 반영의 부족, 그리고 데이터 표현의 단편성 등을 극복하고자 제안되었다. 이러한 방식은 뉴스 콘텐츠 자체뿐 아니라, 뉴스의 전파 구조 및 사용자 반응 정보를 통합적으로 학습할 수 있도록 설계되어 보다 정밀한 가짜 뉴스 탐지를 가능하게 한다(Monti et al., 2019; Zhou et al., 2020).
+Deep learning-based approaches were introduced to overcome the limitations of traditional machine learning methods, such as the reliance on manually engineered features, insufficient consideration of contextual information, and fragmented data representation. These methods are designed to learn not only from the news content itself but also from the propagation structure and user responses, thereby enabling more precise fake news detection (Monti et al., 2019; Zhou et al., 2020).
+%대표적으로 Ruchansky et al., (2017)이 제안한 CSI모델은 콘텐츠(Content), 소셜 반응(Social Engagement), 전파 구조(Propagation) 정보를 통합하는 하이브리드 구조를 기반으로 한다. 이 모델은 Recurrent Neural Network (RNN)을 통해 뉴스 본문의 시퀀스 정보를 학습하고, 사용자 신뢰도는 별도의 점수(score)로 추정한 후, 이 둘을 통합하여 최종 예측을 수행하는 구조를 갖는다. 실험 결과, CSI는 기존의 SVM, Decision Tree, Logistic Regression 등 전통적 분류기 대비 F1-score 기준 약 10~15\% 향상된 성능을 보이며, 딥러닝 모델이 전통 기법에 비해 우수한 탐지 정확도를 달성할 수 있음을 입증하였다. 이후 해당 구조는 다양한 방향으로 확장되었다.
+A representative example is the CSI model proposed by Ruchansky et al. (2017), which employs a hybrid architecture that integrates content, social engagement, and propagation information. In this model, the sequential structure of the news text is captured using a \gls{rnn}, while user credibility is estimated through a separate scoring mechanism. These components are then combined to produce the final prediction. Experimental results demonstrated that CSI achieved approximately a 10-15\% improvement in F1-score compared to traditional classifiers such as SVM, Decision Tree, and Logistic Regression, thereby proving that deep learning models can surpass conventional methods in detection accuracy. Since then, this architecture has been extended in multiple directions.
 
-Jin et al. (2016)은 소셜 미디어에서 사용자와 게시물 간의 상호작용을 양방향 그래프 형태로 모델링하고, 그 확산 구조를 분석하여 가짜 뉴스의 전파 경로 및 속성을 규명하였다. 한편, Vousoughi et al. (2018)은 트위터 기반 대규모 데이터를 활용하여 진짜 뉴스와 가짜 뉴스 간의 전파 특성을 실증적으로 비교 분석하였고, 가짜 뉴스가 진짜 뉴스보다 더 빠르고 깊게, 넓은 범위로 확산된다는 사실을 통계적으로 입증하였다. 이 연구는 전파 구조에 기반한 탐지 방식의 필요성과 함께, 가짜 뉴스 확산의 사회적 위험성을 정량적으로 제시한 중요한 사례로 평가된다.
-그러나 전통적인 그래프 기반 및 통계적 분석 기법은 소셜 확산 구조를 설명하는 데 유용했으나, 뉴스 콘텐츠의 의미적 구조와 사용자 상호작용의 복잡성을 동시에 반영하는 데에는 한계가 존재하였다. 이로 인해 이후의 연구는 콘텐츠 의미와 전파 구조, 사용자 정보를 통합하는 심층 학습 기반 탐지 기법으로 확장되었다. 
+%Long Short-Term Memory (LSTM) 네트워크는 RNN의 확장 구조로, 시퀀스 데이터에서 장기 의존성(Long-Term dependency)을 효과적으로 학습할 수 있다는 강점을 가진다(Hochreiter and Schmidhuber, 1997). 일반적인 RNN은 시점이 길어질수록 과거 정보가 소실되거나 기울기 소실 문제가 발생하는 반면, LSTM은 내부적으로 셀 상태(cell state)와 게이트(gate) 맨커니즘을 활용하여 중요한 과거 정보를 선택적으로 유지하거나 제거함으로써 이러한 문제를 완화한다. 
+The \gls{lstm} network, introduced as an extension of \gls{rnn}, is particularly effective in modeling long-term dependencies within sequential data (Hochreiter and Schmidhuber, 1997). While conventional RNNs often suffer from information loss or vanishing gradients as the sequence length increases, \gls{lstm} mitigates these issues through the use of internal cell states and gating mechanisms, which selectively retain or discard important past information.
 
-딥러닝 기반 접근은 전통적인 기계학습 방식이 가지는 수작업 특성 설계의 한계, 문맥 반영의 부족, 그리고 데이터 표현의 단편성 등을 극복하고자 제안되었다. 이러한 방식은 뉴스 콘텐츠 자체뿐 아니라, 뉴스의 전파 구조 및 사용자 반응 정보를 통합적으로 학습할 수 있도록 설계되어 보다 정밀한 가짜 뉴스 탐지를 가능하게 한다(Monti et al., 2019; Zhou et al., 2020).
-대표적으로 Ruchansky et al., (2017)이 제안한 CSI모델은 콘텐츠(Content), 소셜 반응(Social Engagement), 전파 구조(Propagation) 정보를 통합하는 하이브리드 구조를 기반으로 한다. 이 모델은 Recurrent Neural Network (RNN)을 통해 뉴스 본문의 시퀀스 정보를 학습하고, 사용자 신뢰도는 별도의 점수(score)로 추정한 후, 이 둘을 통합하여 최종 예측을 수행하는 구조를 갖는다. 실험 결과, CSI는 기존의 SVM, Decision Tree, Logistic Regression 등 전통적 분류기 대비 F1-score 기준 약 10~15\% 향상된 성능을 보이며, 딥러닝 모델이 전통 기법에 비해 우수한 탐지 정확도를 달성할 수 있음을 입증하였다. 이후 해당 구조는 다양한 방향으로 확장되었다.
+%가짜 뉴스 탐지에 LSTM을 적용하는 경우, 뉴스 본문을 단어 시퀀스로 입력하여 문장의 구조와 의미 흐름을 파악할 수 있으며, 특히 논리 전개와 시간 순차성, 주장 간 전환 구조 등을 효과적으로 모델링할 수 있다. Ma et al. (2016)은 트위터 게시물 시퀀스를 LSTM으로 모델링한 결과, 전통적인 Bag-of-Words 기반 모델보다 평균 정확도 기준 약 5.8\% 향상된 성능을 달성했으며, 이는 시계열 기반 의미 변화 탐지가 성능 향상의 핵심 요인임을 실험적으로 보여주었다.
+When applied to fake news detection, \gls{lstm} can process news articles as word sequences to capture sentence structure and semantic flow, effectively modeling logical progression, temporal order, and transitions between claims. Ma et al. (2016) demonstrated that modeling Twitter post sequences with \gls{lstm} achieved approximately a 5.8\% improvement in average accuracy compared to traditional Bag-of-Words models, experimentally validating that detecting temporal semantic variations is a key factor in improving performance.
 
-Long Short-Term Memory (LSTM) 네트워크는 RNN의 확장 구조로, 시퀀스 데이터에서 장기 의존성(Long-Term dependency)을 효과적으로 학습할 수 있다는 강점을 가진다(Hochreiter and Schmidhuber, 1997). 일반적인 RNN은 시점이 길어질수록 과거 정보가 소실되거나 기울기 소실 문제가 발생하는 반면, LSTM은 내부적으로 셀 상태(cell state)와 게이트(gate) 맨커니즘을 활용하여 중요한 과거 정보를 선택적으로 유지하거나 제거함으로써 이러한 문제를 완화한다. 가짜 뉴스 탐지에 LSTM을 적용하는 경우, 뉴스 본문을 단어 시퀀스로 입력하여 문장의 구조와 의미 흐름을 파악할 수 있으며, 특히 논리 전개와 시간 순차성, 주장 간 전환 구조 등을 효과적으로 모델링할 수 있다. Ma et al. (2016)은 트위터 게시물 시퀀스를 LSTM으로 모델링한 결과, 전통적인 Bag-of-Words 기반 모델보다 평균 정확도 기준 약 5.8\% 향상된 성능을 달성했으며, 이는 시계열 기반 의미 변화 탐지가 성능 향상의 핵심 요인임을 실험적으로 보여주었다.
-한편, Convolutional Neural Network(CNN)는 원래 이미지 처리에 주로 사용되었으나, 텍스트 분류에도 성공적으로 확장 적용되었다(Kim, 2014). 
+%더 나아가 최근에는 Transformer 구조를 기반으로 한 사전학습 언어모델(pretrained language model, PLM)이 가짜 뉴스 탐지 분야에서 널리 활용되고 있다(Schütz et al., 2021; Li et al., 2022; Azizah et al., 2023). Transformer는 입력 시퀀스 내 단어들이 서로 어떤 관계를 맺고 있는지를 학습하는 Self-Attention 메커니즘에 기반하며, RNN처럼 순차적으로 정보를 처리하지 않고 전체 입력을 병렬적으로 처리할 수 있기 때문에 연산 효율성과 표현 능력 모두에서 탁월한 성능을 보인다 (Vaswani et al., 2017). 
+More recently, Transformer-based \gls{plm} have been widely adopted in fake news detection (Schütz et al., 2021; Li et al., 2022; Azizah et al., 2023). Transformers rely on the self-attention mechanism to model the relationships among words within an input sequence. Unlike \gls{rnn}, which process information sequentially, Transformers enable parallel processing of the entire input, thereby achieving superior computational efficiency and representational capacity (Vaswani et al., 2017).
 
-CNN은 고정된 윈도우 크기의 N-gram 기반 텍스트 조각을 필터(convolutional filter)로 스캔하여 지역적 패턴을 학습하며, 이는 특히 가짜 뉴스의 자극적 문장 구조, 비문법적 반복 사용 등 문체적 특성을 탐지하는 데 효과적이다. CNN은 단어의 순서보다는 패턴의 존재에 민감하게 반응하기 때문에, 문체나 스타일의 차이를 포착하는 데 유리하며, 비교적 짧은 텍스트 입력에 대해 빠르고 강건한 분류 성능을 보인다. Kaliyar et al. (2020)은 FNDNet이라는 딥 CNN 기반 모델을 제안하였으며, 다중 합성곱 계층을 활용하여 뉴스 문서의 특징을 추출하고 이를 기반으로 가짜 뉴스를 분류하였다. FNDNet은 기존의 SVM, Logistic Regression 등 전통적인 분류기와 비교하여 Accuracy 기준 약 6~10\%의 성능 향상을 기록하였으며, CNN 기반 접근이 문체적·구조적 특징을 효과적으로 포착할 수 있음을 실증적으로 보여주었다. 이후 이 구조는 다양한 뉴스 분류 및 혐오 표현 탐지 모델에까지 폭넓게 확장 적용되었다.
+%대표적인 사전학습 모델인 BERT(Bidirectional Encoder Representations from Transformers)는 문맥 정보를 양방향으로 고려하여, 문장 내의 논리적 모순, 상식 위배, 주장 간 충돌 등을 정밀하게 인식할 수 있다. (Devlin et al., 2019)는 BERT를 다양한 자연어 이해 과제에 적용한 결과, 자연어 추론, 문장 분류, 질의응답 등 다수의 벤치마크에서 기존 최고 성능 대비 평균 4~10\% 향상된 정확도를 기록하였음을 보고하였다. Transformer 기반 모델은 단순한 이진 분류를 넘어서, 문장 간 의미 관계 분석, 출처의 신뢰도 평가, 표현 방식의 일관성 분석 등 복합적인 언어 기반 추론 과제에까지 활용되고 있다.
+A representative \gls{plm}, \gls{bert}, considers contextual information bidirectionally and is capable of detecting logical contradictions, violations of common sense, and conflicts between claims within text. Devlin et al. (2019) reported that applying \gls{bert} to a wide range of natural language understanding tasks yielded accuracy improvements of approximately 4-10\% over previous state-of-the-art results across benchmarks such as \gls{nli}, sentence classification, and question answering. Transformer-based models have since been leveraged not only for binary classification but also for more complex language reasoning tasks, including semantic relation analysis between sentences, credibility assessment of information sources, and evaluation of stylistic consistency.
 
-더 나아가 최근에는 Transformer 구조를 기반으로 한 사전학습 언어모델(pretrained language model, PLM)이 가짜 뉴스 탐지 분야에서 널리 활용되고 있다(Schütz et al., 2021; Li et al., 2022; Azizah et al., 2023). Transformer는 입력 시퀀스 내 단어들이 서로 어떤 관계를 맺고 있는지를 학습하는 Self-Attention 메커니즘에 기반하며, RNN처럼 순차적으로 정보를 처리하지 않고 전체 입력을 병렬적으로 처리할 수 있기 때문에 연산 효율성과 표현 능력 모두에서 탁월한 성능을 보인다 (Vaswani et al., 2017). 대표적인 사전학습 모델인 BERT(Bidirectional Encoder Representations from Transformers)는 문맥 정보를 양방향으로 고려하여, 문장 내의 논리적 모순, 상식 위배, 주장 간 충돌 등을 정밀하게 인식할 수 있다. (Devlin et al., 2019)는 BERT를 다양한 자연어 이해 과제에 적용한 결과, 자연어 추론, 문장 분류, 질의응답 등 다수의 벤치마크에서 기존 최고 성능 대비 평균 4~10\% 향상된 정확도를 기록하였음을 보고하였다. Transformer 기반 모델은 단순한 이진 분류를 넘어서, 문장 간 의미 관계 분석, 출처의 신뢰도 평가, 표현 방식의 일관성 분석 등 복합적인 언어 기반 추론 과제에까지 활용되고 있다.
-딥러닝 기반 모델 역시 안정적인 성능을 발휘하기 위해서는 충분한 규모의 고품질 학습 데이터가 필요하며, 사전학습(pretraining) 없이 학습된 모델은 사실성과 상식 기반 추론이 요구되는 문장 판단에서 여전히 오류를 범하는 경우가 많다. 또한, 모델의 판단 과정이 내재된 표현 공간에 은닉되어 있어 해석 가능성(explainability)이 낮으며, 새로운 정보에 대한 유연한 대응이 어렵다는 점에서 탐지 성능의 정밀도와 실용성 측면에서 구조적인 한계를 내포하고 있다.
+%딥러닝 기반 모델 역시 안정적인 성능을 발휘하기 위해서는 충분한 규모의 고품질 학습 데이터가 필요하며, 사전학습(pretraining) 없이 학습된 모델은 사실성과 상식 기반 추론이 요구되는 문장 판단에서 여전히 오류를 범하는 경우가 많다. 또한, 모델의 판단 과정이 내재된 표현 공간에 은닉되어 있어 해석 가능성(explainability)이 낮으며, 새로운 정보에 대한 유연한 대응이 어렵다는 점에서 탐지 성능의 정밀도와 실용성 측면에서 구조적인 한계를 내포하고 있다.
+Nevertheless, deep learning models still require sufficiently large and high-quality training datasets to deliver stable performance. Models trained without pretraining often struggle with tasks demanding factual accuracy and commonsense reasoning. Moreover, because the decision-making process remains embedded within latent representation spaces, their interpretability is limited. Additionally, their lack of flexibility in adapting to new information imposes structural constraints on both detection precision and practical applicability.
 
-이러한 한계를 극복하고자 최근에는 GPT, BERT, T5, LLaMA 등으로 대표되는 대규모 언어모델(Large Language Models, LLM)의 도입이 활발히 이루어지고 있으며, 이는 가짜 뉴스 탐지 기술의 새로운 전환점을 마련하고 있다(Brown et al., 2020; Touvron et al., 2023; Raffel et al., 2020). 기존의 딥러닝 기반 모델들이 주로 정형화된 특성(feature) 기반 분류나 전파 구조 분석에 의존하였다면, LLM은 대규모 텍스트 코퍼스를 기반으로 사전학습을 통해 축적된 언어 지식을 바탕으로 문장 수준에서의 의미 이해, 추론, 그리고 맥락 기반 판단을 가능하게 한다.
-LLM은 단일 문장 또는 문단 내에 내포된 논리적 모순, 비상식적 주장, 혹은 일반 상식과의 불일치를 탐지하는 데 강점을 가지며, 이를 통해 기존 모델보다 더 정교하고 유연한 탐지 결과를 제공할 수 있다(Wu et al., 2024; Hu et al., 2024). 
+%이러한 한계를 극복하고자 최근에는 GPT, BERT, T5, LLaMA 등으로 대표되는 대규모 언어모델(Large Language Models, LLM)의 도입이 활발히 이루어지고 있으며, 이는 가짜 뉴스 탐지 기술의 새로운 전환점을 마련하고 있다(Brown et al., 2020; Touvron et al., 2023; Raffel et al., 2020). 기존의 딥러닝 기반 모델들이 주로 정형화된 특성(feature) 기반 분류나 전파 구조 분석에 의존하였다면, LLM은 대규모 텍스트 코퍼스를 기반으로 사전학습을 통해 축적된 언어 지식을 바탕으로 문장 수준에서의 의미 이해, 추론, 그리고 맥락 기반 판단을 가능하게 한다.
+To overcome these limitations, recent years have witnessed the active adoption of \gls{llm}, represented by GPT, BERT, T5, and LLaMA, marking a new turning point in fake news detection technologies (Brown et al., 2020; Touvron et al., 2023; Raffel et al., 2020). Whereas earlier deep learning-based models primarily relied on structured feature-based classification or propagation structure analysis, \gls{llm} leverage linguistic knowledge accumulated through pretraining on large-scale text corpora to enable sentence-level semantic understanding, reasoning, and context-aware judgment.
 
-Das and Dodge (2025)는 LLM이 생성하거나 패러프레이징한 가짜 뉴스 문장이 기존 탐지 모델에 의해 효과적으로 식별되지 않는다는 문제를 지적하고, BERT, T5, LLaMA 등 다양한 LLM 기반 탐지기의 성능을 비교 분석하였다. 이 연구는 COVID-19 및 LIAR 데이터셋을 활용하여, LLM 기반 탐지기가 기존 분류기 대비 우수한 성능을 보였음을 실험적으로 입증하였다. 또한, Papageorgiou et al. (2025)는 LLM을 활용하여 뉴스 기사에서 사실 기반 문장을 자동으로 추출하고, 이를 그래프 기반 표현과 통합하여 가짜 뉴스 탐지의 정확성과 해석 가능성을 동시에 향상시키는 접근을 제안하였다. 이 연구는 복잡한 언어적 표현과 비정형 텍스트 구조를 효과적으로 포착함으로써, 정량적 성능뿐 아니라 탐지 과정의 설명 가능성 또한 제고할 수 있음을 보여주었다.
-이러한 일련의 연구들은 LLM이 가짜 뉴스 탐지에 있어 문맥 이해, 논리 추론, 상식 기반 판단 등 다양한 언어적 추론 능력에서 기존 딥러닝 기반 모델보다 우월한 성능을 보일 수 있음을 시사하며, 향후 탐지 모델의 핵심 구성 요소로서 LLM이 중심적인 역할을 수행할 가능성을 제시하고 있다. 
+%Das and Dodge (2025)는 LLM이 생성하거나 패러프레이징한 가짜 뉴스 문장이 기존 탐지 모델에 의해 효과적으로 식별되지 않는다는 문제를 지적하고, BERT, T5, LLaMA 등 다양한 LLM 기반 탐지기의 성능을 비교 분석하였다. 이 연구는 COVID-19 및 LIAR 데이터셋을 활용하여, LLM 기반 탐지기가 기존 분류기 대비 우수한 성능을 보였음을 실험적으로 입증하였다. 
+Das and Dodge (2025) highlighted the challenge that fake news sentences generated or paraphrased by \gls{llm} are not effectively detected by conventional classifiers. To address this issue, they conducted a comparative analysis of various LLM-based detectors, including BERT, T5, and LLaMA. Using the COVID-19 and LIAR datasets, their experiments demonstrated that LLM-based approaches achieved superior performance compared with traditional classification models.
 
-그럼에도 불구하고 국내 가짜 뉴스 탐지 기술은 여전히 다음과 같은 구조적인 한계에 직면해 있다. 첫째, 학습에 활용할 수 있는 대규모 공개 데이터셋이 절대적으로 부족하다. 영어권에서는 LIAR, FakeNewsNet, GossipCop, ReCOVery 등 다양한 벤치마크 데이터셋이 공개되어 학계 및 산업계에서 널리 활용되고 있는 반면, 한국어 기반의 데이터셋은 대부분 민간 기관에서 비공개로 보유하고 있거나 규모가 제한적이기 때문에 연구 활용에 제약이 따른다.
+%또한, Papageorgiou et al. (2025)는 LLM을 활용하여 뉴스 기사에서 사실 기반 문장을 자동으로 추출하고, 이를 그래프 기반 표현과 통합하여 가짜 뉴스 탐지의 정확성과 해석 가능성을 동시에 향상시키는 접근을 제안하였다. 이 연구는 복잡한 언어적 표현과 비정형 텍스트 구조를 효과적으로 포착함으로써, 정량적 성능뿐 아니라 탐지 과정의 설명 가능성 또한 제고할 수 있음을 보여주었다.
+Similarly, Papageorgiou et al. (2025) proposed an approach that leverages LLMs to automatically extract fact-based sentences from news articles and integrate them into graph-based representations. This method was shown to enhance both the accuracy and interpretability of fake news detection by effectively capturing complex linguistic expressions and unstructured text patterns. Their findings underscore that LLMs can contribute not only to quantitative performance improvements but also to greater explainability in the detection process.
 
-둘째, 도메인별 편향(domain bias) 문제가 존재한다. 특히 의료, 과학, 기술 등 전문성이 요구되는 영역에서는 레이블이 부착된 허위 정보 데이터가 거의 존재하지 않으며, 이로 인해 해당 영역에서는 도메인 적응(domain adaptation) 기술이나 소수 샘플 학습(few-shot learning) 기법의 적용이 필수적인 과제로 제기되고 있다.
-셋째, 언어 구조적 차이로 인한 어려움도 간과할 수 없다. 한국어는 주어 생략이 빈번하고 어순이 비교적 자유로운 편이며, 조사 및 접미사 중심의 교착어적 특성을 지닌다. 이로 인해 문맥에 대한 의존도가 높고, 의미 단위가 복합적으로 구성되기 때문에 영어를 기반으로 사전 학습된 모델을 한국어 환경에 그대로 전이 학습하기에는 근본적인 구조적 한계가 존재한다.
-이처럼 가짜 뉴스 탐지 기술은 전통적인 기계학습 기법에서 딥러닝 기반의 복합 모델로 진화하였으며, 최근에는 대규모 언어모델(LLM)의 도입을 통해 문맥 이해, 상식 기반 추론, 설명 가능성 등에서 한층 고도화된 탐지 능력을 보이고 있다. 
+%LLM은 단일 문장 또는 문단 내에 내포된 논리적 모순, 비상식적 주장, 혹은 일반 상식과의 불일치를 탐지하는 데 강점을 가지며, 이를 통해 기존 딥러닝 기반 모델보다 더 정교하고 유연한 탐지 결과를 제공할 수 있다(Wu et al., 2024; Hu et al., 2024). 이러한 성과들은 LLM이 가짜 뉴스 탐지에서 문맥 이해, 논리 추론, 상식 기반 판단 등 다양한 언어적 추론 능력에서 우월성을 지니며, 향후 탐지 모델의 핵심 구성 요소로 자리매김할 가능성을 시사한다.
+\gls{llm} demonstrate strong capabilities in detecting logical inconsistencies, implausible claims, or violations of commonsense within individual sentences or paragraphs, thereby providing more precise and flexible detection outcomes compared to traditional deep learning models (Wu et al., 2024; Hu et al., 2024). These results further suggest that \gls{llm} exhibit superior abilities in contextual understanding, logical reasoning, and commonsense-based judgment for fake news detection, indicating their potential to become a central component of future detection systems.
 
-최근 가짜 뉴스 탐지 분야에서는 전문가의 수작업 검증이 시간과 비용 면에서 큰 제약을 가지며, 검증자의 주관이 개입될 수 있다는 한계가 지적되고 있다 (Tajrian et al., 2023). 이에 따라, 대규모 데이터를 기반으로 자동 분류가 가능한 딥러닝 기반의 접근법이 주목받고 있다(Cavus et al., 2023). 하지만 딥러닝 모델의 성능은 학습 데이터의 양과 품질에 크게 의존하며, 특정 주제에 한정된 문제일수록 데이터 부족 문제가 심각해진다.
+%그러나 실제 응용 단계에서는 여전히 구조적인 제약이 존재한다. 특히 전문가에 의한 수작업 검증은 시간과 비용 측면에서 비효율적일 뿐만 아니라 검증자의 주관이 개입될 수 있다는 한계가 지속적으로 지적되어 왔다 (Tajrian et al., 2023). 이러한 문제의식은 대규모 데이터를 기반으로 자동 분류를 가능하게 하는 딥러닝 기반 접근법의 필요성을 부각시켰다(Cavus et al., 2023). 
+However, significant structural constraints remain in practical applications. Manual verification by experts is not only inefficient in terms of time and cost but is also limited by the potential for subjective bias (Tajrian et al., 2023). These challenges have highlighted the necessity of deep learning-based approaches capable of enabling automated classification on large-scale datasets (Cavus et al., 2023). 
 
-특히 COVID-19와 같은 신종 감염병 관련 가짜 뉴스는, 급변하는 정보 환경과 제한된 공신력 있는 데이터로 인해 수집 자체가 어렵고, 정확한 사실 검증이 이루어지지 않아 학습 데이터로 활용되기 어려운 경우가 많다. 이러한 저자원 상황에서는 모델이 충분히 학습되지 않아 성능이 크게 저하되는 문제가 발생한다.
+%그럼에도 불구하고 딥러닝 모델의 성능은 학습 데이터의 양과 품질에 크게 의존하며, 특정 주제에 한정된 경우에는 데이터 부족 문제가 특히 심각하게 나타난다. 
+%대표적으로 COVID-19와 같은 신종 감염병 관련 가짜 뉴스는 급변하는 정보 환경과 제한된 공신력 있는 데이터로 인해 수집 자체가 어렵고, 사실 검증이 충분히 이루어지지 않아 학습 데이터로 활용되기 어려운 경우가 많다. 이러한 저자원 상황에서는 모델이 충분히 학습되지 못해 성능이 크게 저하되는 문제가 발생한다.
+Nevertheless, the performance of deep learning models is heavily dependent on the quantity and quality of training data, and the problem of data scarcity becomes particularly acute when the task is restricted to specific domains. A notable case is COVID-19-related fake news, where the rapidly evolving information landscape and the limited availability of authoritative data make collection inherently difficult and factual verification insufficient, thereby preventing effective use of such data for training. Under these low-resource conditions, models often fail to learn adequately, resulting in a substantial decline in performance.
 
-이러한 문제를 극복하기 위한 효과적인 전략 중 하나가 전이학습(Transfer Learning)이다. 전이학습은 관련성이 높은 대규모 데이터셋에서 사전학습(pretraining)을 수행한 모델의 지식을 활용하여, 목표로 하는 소규모 태스크에 재적용(fine-tuning)함으로써 적은 데이터로도 높은 성능을 달성할 수 있도록 한다. 이는 데이터 부족 문제를 해결하면서도 도메인 특화된 정밀한 예측이 가능하게 하는 실용적 접근으로 간주된다(Pan and Yang, 2010; Ruder et al., 2019).
+%%%%%%% Transfer Learning
+%이러한 문제를 극복하기 위한 효과적인 전략 중 하나가 전이학습(Transfer Learning)이다. 전이학습은 관련성이 높은 대규모 데이터셋에서 사전학습(pretraining)을 수행한 모델의 지식을 활용하여, 목표로 하는 소규모 태스크에 재적용(fine-tuning)함으로써 적은 데이터로도 높은 성능을 달성할 수 있도록 한다. 이는 데이터 부족 문제를 해결하면서도 도메인 특화된 정밀한 예측이 가능하게 하는 실용적 접근으로 간주된다(Pan and Yang, 2010; Ruder et al., 2019).
+One effective strategy to address these challenges is transfer learning. Transfer learning leverages the knowledge of a model pretrained on a large-scale, related dataset and reapplies it to a target task with limited data through fine-tuning, thereby achieving high performance even with relatively small training sets. This approach is regarded as a practical solution for alleviating data scarcity while enabling domain-specific and precise predictions (Pan and Yang, 2010; Ruder et al., 2019).
 
-전이학습은 크게 표현 추출(feature extraction) 방식과 파인튜닝(fine-tuning) 방식으로 나뉜다(Peters et al., 2019). 전자는 사전학습된 모델의 내부 표현을 고정된 feature로 활용하여 새로운 분류기를 학습하는 방식이며, 후자는 사전학습된 모델의 일부 또는 전부를 재학습하는 방식이다. 최근에는 후자의 방식이 더 우수한 성능을 보여주며, 다양한 응용에서 주류로 자리잡고 있다.
-가짜 뉴스 탐지 문제에서도 이러한 전이학습 기법은 활발히 활용되고 있다(Crus et al., 2020; Slovikovskaya et al., 2019; Yang et al., 2025) . 예를 들어, 일반 뉴스 데이터를 대규모로 학습한 후, COVID-19와 같은 특정 도메인에 대해 소규모 데이터를 추가로 학습시킴으로써 성능 향상을 꾀하는 연구들이 보고되고 있다. 이러한 접근은 도메인 간 지식 전이를 통해, 표면적으로는 전혀 다른 주제의 뉴스라도 문체, 어휘, 구조 등에서 공통된 패턴을 포착하여 효과적인 판별을 가능케 한다.
+%이러한 전이학습 기법은 가짜 뉴스 탐지 문제에서 활발히 활용되고 있다(Crus et al., 2020; Slovikovskaya et al., 2019; Yang et al., 2025) . 예를 들어, 일반 뉴스 데이터를 대규모로 학습한 후, COVID-19와 같은 특정 도메인에 대해 소규모 데이터를 추가로 학습시킴으로써 성능 향상을 꾀하는 연구들이 보고되고 있다. 이러한 접근은 도메인 간 지식 전이를 통해, 표면적으로는 전혀 다른 주제의 뉴스라도 문체, 어휘, 구조 등에서 공통된 패턴을 포착하여 효과적인 판별을 가능케 한다.
+Such transfer learning techniques have been actively applied to the task of fake news detection (Crus et al., 2020; Slovikovskaya et al., 2019; Yang et al., 2025). For instance, some studies have reported performance improvements by first training models on large-scale general news datasets and subsequently fine-tuning them on smaller, domain-specific datasets such as those related to COVID-19. This strategy allows effective discrimination by transferring knowledge across domains, thereby capturing common patterns in style, vocabulary, and structure, even when the topics of news articles appear entirely different on the surface.
 
-그러나 전이학습 역시 한계는 존재한다. 사전학습 데이터와 실제 적용 대상 도메인 간 차이가 클 경우, 오히려 모델 성능이 저하되거나 편향된 판단을 내릴 위험이 존재한다. 또한 사전학습된 모델이 포함하고 있는 지식이 최신 정보와 불일치할 경우, 부정확한 판단을 내릴 수 있다는 점도 문제로 지적된다. 
+%그러나 전이학습 역시 한계는 존재한다. 사전학습 데이터와 실제 적용 대상 도메인 간 차이가 클 경우, 오히려 모델 성능이 저하되거나 편향된 판단을 내릴 위험이 존재한다. 또한 사전학습된 모델이 포함하고 있는 지식이 최신 정보와 불일치할 경우, 부정확한 판단을 내릴 수 있다는 점도 문제로 지적된다. 
+However, transfer learning also has limitations. When there is a significant discrepancy between the pretraining dataset and the target domain, model performance may degrade or result in biased predictions. Furthermore, if the knowledge encoded in the pretrained model is inconsistent with the most up-to-date information, the model may generate inaccurate judgments.
+%%%%%% RAG
+%이러한 한계를 보완하기 위한 또 다른 접근으로, 가짜 뉴스 탐지 분야에서는 RAG가 최근 효과적인 접근 방식으로 주목 받고 있다(Malladi et al., 2024; Niu et al., 2024; Li et al., 2024). 가짜 뉴스는 시의성과 도메인 특이성이 매우 강한 문제로, 새로운 사건이 발생할 때마다 정보가 빠르게 변화하며, 기존 모델만으로는 정확한 탐지가 어려울 수 있다. 이때, RAG는 최신 기사, 정부 발표, 팩트 체크 데이터 등 외부 신뢰 자원에서 관련 정보를 실시간 검색하여 모델에 입력함으로써, 보다 사실에 기반한 판별이 가능하게 한다.
+To address these issues, another promising approach in fake news detection is \gls{rag}, which has recently gained significant attention (Malladi et al., 2024; Niu et al., 2024; Li et al., 2024). Fake news is a problem characterized by strong temporal and domain specificity, where information evolves rapidly with new events, making accurate detection difficult with conventional models alone. In this context, \gls{rag} enhances fact-based classification by retrieving relevant information in real time from external trusted sources such as recent articles, government announcements, and fact-checking databases, and incorporating it into the model input.
 
-이에 본 연구는 불충분한 데이터 환경에서도 딥러닝 모델이 효과적으로 학습될 수 있도록 하는 탐지기를 설계하고, 이를 통해 기존 연구 대비 높은 정확도를 달성하는 한국어 COVID-19 가짜 뉴스 탐지 접근을 제안한다. 더 나아가, 이러한 결과를 기반으로 대규모 언어모델(LLM)에 효과적으로 적용 가능한 학습 전략을 모색함으로써, 제한된 데이터 환경에서도 LLM 기반 탐지 성능을 극대화할 수 있는 실용적 접근을 제시하고자 한다.
-% 소규모 데이터셋, Transfer learning, PEFT, LoRA 기반, 최근에는 KME까지. --- 이러한 한계가 있다. 사실성을 뒷받침 하는 일종의 CLUE를 제공하는 형태. 
+%실제로 RAG 기반 가짜 뉴스 탐지 연구에서는, 생성된 응답뿐 아니라 근거가 되는 문장을 함께 제공함으로써 설명 가능성을 확보하고, 기존의 분류 기반 모델보다 사용자 신뢰를 더 높일 수 있다는 결과도 보고되고 있다(Chen et al., 2024; Nezafat et al., 2024).
+In fact, studies on \gls{rag}-based fake news detection have reported that, beyond generating predictions, providing supporting evidence sentences improves explainability and increases user trust compared to traditional classification models (Chen et al., 2024; Nezafat et al., 2024).
 
+%그럼에도 불구하고 국내 가짜 뉴스 탐지 기술은 여전히 다음과 같은 구조적인 한계에 직면해 있다. 
+%첫째, 학습에 활용할 수 있는 대규모 공개 데이터셋이 절대적으로 부족하다. 영어권에서는 LIAR, FakeNewsNet, GossipCop, ReCOVery 등 다양한 벤치마크 데이터셋이 공개되어 학계 및 산업계에서 널리 활용되고 있는 반면, 한국어 기반의 데이터셋은 대부분 민간 기관에서 비공개로 보유하고 있거나 규모가 제한적이기 때문에 연구 활용에 제약이 따른다. 
+%둘째, 도메인별 편향(domain bias) 문제가 존재한다. 특히 의료, 과학, 기술 등 전문성이 요구되는 영역에서는 레이블이 부착된 허위 정보 데이터가 거의 존재하지 않으며, 이로 인해 해당 영역에서는 도메인 적응(domain adaptation) 기술이나 소수 샘플 학습(few-shot learning) 기법의 적용이 필수적인 과제로 제기되고 있다.
+%셋째, 언어 구조적 차이로 인한 어려움도 간과할 수 없다. 한국어는 주어 생략이 빈번하고 어순이 비교적 자유로운 편이며, 조사 및 접미사 중심의 교착어적 특성을 지닌다. 이로 인해 문맥에 대한 의존도가 높고, 의미 단위가 복합적으로 구성되기 때문에 영어를 기반으로 사전 학습된 모델을 한국어 환경에 그대로 전이 학습하기에는 근본적인 구조적 한계가 존재한다.
+Despite these advances, fake news detection technology in Korea still faces several structural limitations.
+First, there is an absolute shortage of large-scale publicly available datasets for training. While datasets such as LIAR, FakeNewsNet, GossipCop, and ReCOVery have been released in the English-speaking domain and are widely used in both academia and industry, most Korean-language datasets are either privately held by commercial organizations or limited in scale, restricting their usability for research.
+Second, there exists a problem of domain bias. In highly specialized fields such as medicine, science, and technology, labeled datasets containing misinformation are extremely scarce. As a result, domain adaptation techniques or few-shot learning approaches have become indispensable for addressing these challenges.
+Third, linguistic differences present additional difficulties. Korean frequently omits subjects, allows relatively free word order, and exhibits agglutinative characteristics centered around particles and suffixes. Consequently, meaning is heavily dependent on context and expressed through complex compositional units, which imposes a fundamental limitation when directly transferring pretrained models built on English data to Korean applications.
 
+%가짜 뉴스 탐지 문제는 최신 뉴스와 같이 시시각각 변화하는 정보에 민감하게 반응해야 한다는 특성을 가진다. 그러나 대규모 언어모델(LLM)의 등장으로 탐지 성능은 크게 고도화되었음에도 불구하고, 이를 실제 환경에 적용하기 위해서는 막대한 연산 자원과 메모리가 요구된다는 현실적인 제약이 존재한다. 이러한 한계를 완화하기 위해 zero-shot, few-shot prompting과 같은 기법들이 제안되었으나, 이들 방식은 입력 의존성이 크고 지식을 장기적으로 반영하지 못한다는 한계가 지적되고 있다.
+Fake news detection is inherently sensitive to rapidly evolving information, particularly in the context of breaking news. Although the emergence of \gls{llm} has significantly advanced detection capabilities, their practical deployment is constrained by the substantial computational and memory resources required. To mitigate these limitations, approaches such as zero-shot and few-shot prompting have been introduced; however, these methods suffer from high input dependency and lack the capacity to retain knowledge over the long term.
 
-- 최신 뉴스에 민감하다.
-- llm의 등장으로 새로운 fine-tuning방법 하드웨어 자원이 딸리기 때문에
-- zero shot, few shot prompting 등이 있지만 한계가 있다.
-
-
+%이에 본 연구는 불충분한 데이터 환경에서도 딥러닝 모델이 효과적으로 학습될 수 있도록 하는 탐지기를 설계하고, 이를 통해 기존 연구 대비 높은 정확도를 달성하는 한국어 COVID-19 가짜 뉴스 탐지 접근을 제안한다. 더 나아가, 이러한 결과를 기반으로 대규모 언어모델(LLM)에 효과적으로 적용 가능한 학습 전략을 모색함으로써, 제한된 데이터 환경에서도 LLM 기반 탐지 성능을 극대화할 수 있는 실용적 접근을 제시하고자 한다.
+Against this backdrop, the present paper proposes a detection framework designed to enable deep learning models to learn effectively even under data-scarce conditions, thereby achieving higher accuracy compared to prior research in Korean COVID-19 fake news detection. Furthermore, building on these results, we aim to explore learning strategies that can be effectively integrated into \gls{llm}, offering a practical approach to maximize LLM-based detection performance in resource-constrained environments.
 %============================================================%
 % Method					     %
 %============================================================%
@@ -465,32 +531,42 @@ Das and Dodge (2025)는 LLM이 생성하거나 패러프레이징한 가짜 뉴�
 
 \subsection{System Overview}
 
-본 연구에서는 KoBART 기반의 COVID-19 가짜 문장 분류기를 통해, 외부 지식 검색 모듈과 관계 기반 파인튜닝 기법을 결합한 Relation-Aware Fine-Tuning 시스템을 제안한다. 
-본 시스템은 최신 정보를 반영할 수 있는 검색 기반 구조와, 모델의 기존 지식과 새로운 정보 간의 관계를 고려한 파인튜닝 전략을 결합함으로써, 정확도와 지속적인 적응성을 동시에 확보하는 것을 목표로 한다. 전체 아키텍처는 다음의 네 가지 핵심 컴포넌트로 구성된다.
+This paper proposes a \gls{raft} system that integrates a \gls{kobart}-based fake sentence classifier with an external knowledge retrieval module and a relation-driven fine-tuning strategy. The objective of the system is to ensure both high classification accuracy and continual adaptability by combining a retrieval-augmented architecture capable of incorporating up-to-date information with a fine-tuning mechanism that accounts for the relationship between the model's existing knowledge and newly retrieved data. The overall architecture is composed of the following four core components.
 
 \begin{enumerate}
-    \item\textbf{KoBART 기반 Classifier} :
-    본 시스템의 중심은 KoBART(Bidirectional and Auto-Regressive Transformers for Korean) 기반의 시퀀스 분류기로, 입력 문장에 대해 "True" 혹은 "False" 중 하나의 응답을 생성한다. 해당 분류기는 COVID-19 관련 가짜 뉴스 탐지 태스크에 최적화된 라벨링 데이터셋을 기반으로 사전 파인튜닝되어 있으며, 사용자로부터 입력된 쿼리에 대한 예측 결과는 'Old data'로 간주된다. 모델의 출력에 대한 신뢰도는 confidence score를 통해 정량화되며, 이 값을 기반으로 Old data의 레이블 신뢰성이 추정된다.
+    \item\textbf{\gls{kobart}-based classifier} :
+    %본 시스템의 중심은 KoBART(Bidirectional and Auto-Regressive Transformers for Korean) 기반의 시퀀스 분류기로, 입력 문장에 대해 "True" 혹은 "False" 중 하나의 응답을 생성한다. 해당 분류기는 COVID-19 관련 가짜 뉴스 탐지 태스크에 최적화된 라벨링 데이터셋을 기반으로 사전 파인튜닝되어 있으며, 사용자로부터 입력된 쿼리에 대한 예측 결과는 'Old data'로 간주된다. 모델의 출력에 대한 신뢰도는 confidence score를 통해 정량화되며, 이 값을 기반으로 Old data의 레이블 신뢰성이 추정된다.
+    A sequence classification model built on \gls{kobart}, which generates either a "True" or "False" label in response to a given input sentence. This classifier is pretrained on a labeled dataset specifically tailored to COVID-19 fake news detection. The output generated by the classifier in response to a user query is treated as old data. The reliability of the model's output is quantified using a confidence score, which serves as an estimate of the trustworthiness of the old data's label.
+    \item\textbf{\gls{faiss}-based vector retriever} : 
+    %외부 지식 검색은 FAISS(Facebook AI Similarity Search)를 기반으로 수행된다. 입력된 문장은 KoBART 인코더를 통해 벡터로 임베딩되며, 해당 벡터는 사전 구축된 벡터 데이터베이스 내에서 유사 문장을 검색하는 데 활용된다. 이 데이터베이스는 최신 수집된 COVID-19 관련 문장들로 구성되어 있으며, 이를 통해 최신성 있는 외부 지식을 반영할 수 있다. 검색된 상위 후보 문장들은 Cross-Encoder 기반의 재랭킹 과정을 거쳐 정렬되며, 이들은 'New data'로 간주된다.
+    A retrieval module implemented with \gls{faiss}, where the input query is embedded into a vector representation using the \gls{kobart} encoder. This vector is then used to search a pre-constructed vector database for semantically similar sentences. The database consists of recently collected COVID-19 related sentences, allowing the system to reflect the latest external knowledge. The top-k retrieved candidates are subsequently re-ranked using a cross-encoder and treated as new data.
 
-    \item\textbf{FAISS 기반 벡터 검색기} : 
-    외부 지식 검색은 FAISS(Facebook AI Similarity Search)를 기반으로 수행된다. 입력된 문장은 KoBART 인코더를 통해 벡터로 임베딩되며, 해당 벡터는 사전 구축된 벡터 데이터베이스 내에서 유사 문장을 검색하는 데 활용된다. 이 데이터베이스는 최신 수집된 COVID-19 관련 문장들로 구성되어 있으며, 이를 통해 최신성 있는 외부 지식을 반영할 수 있다. 검색된 상위 후보 문장들은 Cross-Encoder 기반의 재랭킹 과정을 거쳐 정렬되며, 이들은 'New data'로 간주된다.
-
-    \item\textbf{NLI 기반 관계 판단} : 
-    검색 및 재정렬된 New data는, KoBART 분류기가 생성한 Old data와 함께 자연어 추론(Natural Language Inference, NLI) 방식을 통해 관계 분석이 수행된다. Old data와 New data 간의 논리적 관계를 평가하여 세 가지 범주 중 하나인 함의(entailment), 모순(contradiction), 중립(neutral)으로 분류한다. 이 분류 결과는 이후 파인튜닝 전략을 결정하는 핵심 기준으로 활용된다.
-    
-    \item\textbf{관계 기반 파인튜닝} : 
-    NLI 관계 판단 결과에 따라 파인튜닝 방식이 달라진다. 만약 Old data와 New data가 모순(contradiction) 관계에 있는 경우, 기존 지식이 잘못되었을 가능성이 크므로 New data만을 활용하여 모델을 업데이트한다. 반면, 중립(neutral) 관계일 경우에는 Old data와 New data를 결합하여 모델에 혼합된 정보를 학습시킨다. 마지막으로, 함의(entailment) 관계인 경우에는 기존 모델이 이미 올바른 예측을 수행하고 있다고 판단하여 파라미터를 업데이트하지 않는다. 이러한 관계 기반 업데이트 전략은 불필요한 파라미터 수정은 피하면서도, 모델의 최신성 유지와 신뢰도 향상을 동시에 달성하도록 설계되었다.
+    \item\textbf{\gls{nli}-based Knowledge editing strategy} : 
+    %검색 및 재정렬된 New data는, KoBART 분류기가 생성한 Old data와 함께 자연어 추론(Natural Language Inference, NLI) 방식을 통해 관계 분석이 수행된다. Old data와 New data 간의 논리적 관계를 평가하여 세 가지 범주 중 하나인 함의(entailment), 모순(contradiction), 중립(neutral)으로 분류한다. 이 분류 결과는 이후 파인튜닝 전략을 결정하는 핵심 기준으로 활용된다.
+    An approach that pairs the re-ranked new data with the old data produced by the \gls{kobart} classifier, and evaluates their logical relationship using \gls{nli}. Based on the analysis, each pair is classified into one of three categories: entailment, contradiction, or neutral. This classification forms the basis for selecting the appropriate fine-tuning strategy.
+    \item\textbf{Related-Aware Fine-Tuning} : 
+    %NLI 관계 판단 결과에 따라 파인튜닝 방식이 달라진다. 만약 Old data와 New data가 모순(contradiction) 관계에 있는 경우, 기존 지식이 잘못되었을 가능성이 크므로 New data만을 활용하여 모델을 업데이트한다. 반면, 중립(neutral) 관계일 경우에는 Old data와 New data를 결합하여 모델에 혼합된 정보를 학습시킨다. 마지막으로, 함의(entailment) 관계인 경우에는 기존 모델이 이미 올바른 예측을 수행하고 있다고 판단하여 파라미터를 업데이트하지 않는다. 이러한 관계 기반 업데이트 전략은 불필요한 파라미터 수정은 피하면서도, 모델의 최신성 유지와 신뢰도 향상을 동시에 달성하도록 설계되었다.
+    A fine-tuning mechanism that adapts the update process according to the relationship between old and new data.
+    In cases of contradiction, the existing knowledge is regarded as incorrect, and the model is updated using only the new data.
+    In cases of neutrality, both old and new data are combined to fine-tune the model with blended information.
+    In cases of entailment, the model is considered to have already produced a correct prediction, and no parameter update is performed.
+    This mechanism is designed to maintain model consistency and knowledge freshness, while avoiding unnecessary parameter modifications.
 \end{enumerate}
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{architecture.png}
-    \caption{The architecture }
+    \caption{The architecture}
+    \label{Fig.: architecture}
 \end{figure}
 
-그림 1은 본 연구에서 제안하는 Relation-Aware Fine-Tuning 프레임워크의 전반적인 동작 과정을 시각적으로 나타낸 것이다. 제안된 시스템은 의미적 유사성과 논리적 일관성에 기반하여 선택적인 모델 파인튜닝(selective fine-tuning)을 수행하며, 전체 프로세스는 네 가지 주요 단계로 구성된다.
+%\cref{Fig.: architecture}은 본 연구에서 제안하는 Relation-Aware Fine-Tuning 프레임워크의 전반적인 동작 과정을 시각적으로 나타낸 것이다. 제안된 시스템은 의미적 유사성과 논리적 일관성에 기반하여 선택적인 모델 파인튜닝(selective fine-tuning)을 수행하며, 전체 프로세스는 네 가지 주요 단계로 구성된다.
+(그림 수정 필요, label 수정필요)
 
-첫 번째 단계인 'Vector Database Construction'에서는 최신 수집된 뉴스 문장들을 KoBART 인코더를 통해 임베딩한 후, FAISS(Facebook AI Similarity Search)를 이용하여 벡터 기반 유사도 검색이 가능한 데이터베이스를 구축한다. 이 데이터베이스는 외부 지식으로 기능하며, 이후 검색 단계에서 의미적으로 유사한 문장을 제공하는 기반이 된다.
+\cref{Fig.: architecture} visually illustrates the overall operational flow of the proposed relation-aware fine-tuning framework. The system performs selective fine-tuning based on both semantic similarity and logical consistency between existing model outputs and newly retrieved information. The entire process is structured into four main stages, corresponding to the core components of the framework: classification, retrieval, relation assessment, and conditional model update.
+
+%첫 번째 단계인 'Vector Database Construction'에서는 최신 수집된 뉴스 문장들을 KoBART 인코더를 통해 임베딩한 후, FAISS(Facebook AI Similarity Search)를 이용하여 벡터 기반 유사도 검색이 가능한 데이터베이스를 구축한다. 이 데이터베이스는 외부 지식으로 기능하며, 이후 검색 단계에서 의미적으로 유사한 문장을 제공하는 기반이 된다.
+The first stage, Vector Database Construction, involves embedding a collection of recently gathered news sentences using the \gls{kobart} encoder. These embeddings are then indexed using \gls{faiss} to build a vector-based similarity search database. This vector database functions as an external knowledge repository and serves as the basis for retrieving semantically similar sentences in the subsequent retrieval stage.
 
 두 번째 단계는 'Data Retrieve Process'로, 사용자의 질의 문장이 주어지면 해당 문장은 KoBART 인코더를 통해 벡터로 임베딩된다. 이후 FAISS 기반 벡터 데이터베이스로부터 유사 문장이 검색되며, 검색된 후보 문장들은 Cross-Encoder 기반의 재랭킹 모듈을 통해 의미 정합성에 따라 정렬된다. 재랭킹된 상위 문장은 최종적으로 ‘New data’로 간주되며, 이후 관계 판단 및 파인튜닝에 사용된다.
 
